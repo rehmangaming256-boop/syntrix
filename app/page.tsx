@@ -82,9 +82,9 @@ import { motion, AnimatePresence } from "framer-motion";
     attackBoss: () => void;
   }) {
     const [minutesInput, setMinutesInput] =
-      useState(25);
-  
-    const [time, setTime] = useState(25 * 60);
+  useState(25);
+
+const [time, setTime] = useState(25 * 60);
 
     const [running, setRunning] =
       useState(false);
@@ -286,7 +286,34 @@ import { motion, AnimatePresence } from "framer-motion";
 
   export default function Home() {
     const [xp, setXp] = useState(0);
+const dailyQuotes = [
+  "Discipline is choosing your future over comfort.",
+  "Small progress is still progress.",
+  "Your habits shape your identity.",
+  "Focus builds power.",
+  "Consistency beats motivation.",
+  "Every day is a new chance to improve.",
+  "The hardest part is starting.",
+  "You become what you repeat daily.",
+  "Distraction steals your potential.",
+  "Level up your mind every day.",
+  "The future depends on what you do today.",
+  "One focused hour can change everything.",
+];
 
+const [quote, setQuote] = useState("");
+
+useEffect(() => {
+  const randomQuote =
+    dailyQuotes[
+      Math.floor(
+        Math.random() *
+          dailyQuotes.length
+      )
+    ];
+
+  setQuote(randomQuote);
+}, []);
     const [level, setLevel] =
       useState(1);
 
@@ -450,7 +477,27 @@ useEffect(() => {
 
     const requiredXP =
       50 + level * 25;
+const completedTasks =
+  tasks.filter((t) => t.done)
+    .length +
+  dailyQuests.filter((q) => q.done)
+    .length;
 
+const totalTasks =
+  tasks.length +
+  dailyQuests.length;
+
+const completionRate =
+  totalTasks > 0
+    ? Math.round(
+        (completedTasks /
+          totalTasks) *
+          100
+      )
+    : 0;
+
+const totalXP =
+  level * requiredXP + xp;
     const currentRank =
       level >= 50
         ? "MYTHIC ⚡"
@@ -918,25 +965,21 @@ if (savedRerolls) {
   {/* PARTICLES */}
 
   {[...Array(60)].map((_, i) => (
-    <div
-      key={i}
-      className="absolute rounded-full bg-white/20 animate-pulse"
-      style={{
-        width: `${Math.random() * 4 + 1}px`,
-        height: `${Math.random() * 4 + 1}px`,
-        top: `${Math.random() * 100}%`,
-        left: `${Math.random() * 100}%`,
-        animationDuration: `${
-          Math.random() * 5 + 3
-        }s`,
-        animationDelay: `${
-          Math.random() * 5
-        }s`,
-        boxShadow:
-          "0 0 10px rgba(255,255,255,0.8)",
-      }}
-    />
-  ))}
+  <div
+    key={i}
+    className="absolute rounded-full bg-white/20 animate-pulse"
+    style={{
+      width: "3px",
+      height: "3px",
+      top: `${(i * 7) % 100}%`,
+      left: `${(i * 13) % 100}%`,
+      animationDuration: "4s",
+      animationDelay: `${i * 0.1}s`,
+      boxShadow:
+        "0 0 10px rgba(255,255,255,0.8)",
+    }}
+  />
+))}
           <div
             className="absolute inset-0 opacity-10"
             style={{
@@ -1044,7 +1087,19 @@ if (savedRerolls) {
 
   </div>
   
-  
+  {/* DAILY QUOTE */}
+
+<div className="bg-zinc-900/70 backdrop-blur-xl border border-cyan-500/20 rounded-3xl p-6 mb-10 shadow-[0_0_30px_rgba(34,211,238,0.15)]">
+
+  <p className="text-cyan-400 text-sm uppercase tracking-[0.3em] mb-3">
+    Daily Quote
+  </p>
+
+  <h2 className="text-2xl md:text-3xl font-black leading-relaxed text-white">
+    {quote}
+  </h2>
+
+</div>
           {/* XP */}
           <div className="bg-zinc-900/70 backdrop-blur-xl border border-purple-500/20 rounded-3xl p-6 md:p-8 mb-10 shadow-[0_0_40px_rgba(168,85,247,0.15)] hover:border-purple-400 transition-all">
 
@@ -1066,7 +1121,63 @@ if (savedRerolls) {
             />
 
           </div>
+{/* STATISTICS DASHBOARD */}
 
+<div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5 mb-10">
+
+  {/* TOTAL XP */}
+  <div className="bg-zinc-900/70 backdrop-blur-xl border border-cyan-500/20 rounded-3xl p-6 shadow-[0_0_30px_rgba(34,211,238,0.15)]">
+
+    <p className="text-zinc-400 text-sm uppercase tracking-widest mb-2">
+      Total XP
+    </p>
+
+    <h2 className="text-4xl font-black text-cyan-400">
+      {totalXP}
+    </h2>
+
+  </div>
+
+  {/* TASKS DONE */}
+  <div className="bg-zinc-900/70 backdrop-blur-xl border border-green-500/20 rounded-3xl p-6 shadow-[0_0_30px_rgba(34,197,94,0.15)]">
+
+    <p className="text-zinc-400 text-sm uppercase tracking-widest mb-2">
+      Completed Tasks
+    </p>
+
+    <h2 className="text-4xl font-black text-green-400">
+      {completedTasks}
+    </h2>
+
+  </div>
+
+  {/* TOTAL TASKS */}
+  <div className="bg-zinc-900/70 backdrop-blur-xl border border-purple-500/20 rounded-3xl p-6 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+
+    <p className="text-zinc-400 text-sm uppercase tracking-widest mb-2">
+      Total Tasks
+    </p>
+
+    <h2 className="text-4xl font-black text-purple-400">
+      {totalTasks}
+    </h2>
+
+  </div>
+
+  {/* COMPLETION RATE */}
+  <div className="bg-zinc-900/70 backdrop-blur-xl border border-yellow-500/20 rounded-3xl p-6 shadow-[0_0_30px_rgba(250,204,21,0.15)]">
+
+    <p className="text-zinc-400 text-sm uppercase tracking-widest mb-2">
+      Completion Rate
+    </p>
+
+    <h2 className="text-4xl font-black text-yellow-400">
+      {completionRate}%
+    </h2>
+
+  </div>
+
+</div>
          
 {/* FOCUS */}
 {activeTab === "focus" && (
