@@ -538,7 +538,27 @@ const totalXP =
         unlocked: level >= 20,
       },
     ];
-  function generateDailyQuests() {
+  const leaderboard = [
+  {
+    name: "ShadowMind",
+    level: 18,
+    xp: 4200,
+    rank: "Discipline King 👑",
+  },
+  {
+    name: "NeoFocus",
+    level: 15,
+    xp: 3500,
+    rank: "Focus Beast ⚡",
+  },
+  {
+    name: "AlphaZen",
+    level: 14,
+    xp: 3100,
+    rank: "Dopamine Slayer 🔥",
+  },
+];
+    function generateDailyQuests() {
     const shuffled = [...questPool]
       .sort(() => 0.5 - Math.random())
       .slice(0, 5);
@@ -1232,12 +1252,76 @@ if (savedRerolls) {
   >
     Achievement
   </button>
-
+<button
+  onClick={() =>
+    setActiveTab("leaderboard")
+  }
+  className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold whitespace-nowrap transition-all ${
+    activeTab === "leaderboard"
+      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+      : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+  }`}
+>
+  Leaderboard
+</button>
 </div>
 
 {/* TAB CONTENT */}
 <AnimatePresence mode="wait">
+{/* LEADERBOARD */}
+{activeTab === "leaderboard" && (
+  <motion.div
+    key="leaderboard"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+    transition={{ duration: 0.35 }}
+    className="grid gap-5 mb-10"
+  >
 
+    {leaderboard.map((user, index) => (
+      <div
+        key={index}
+        className="bg-zinc-900/70 backdrop-blur-xl border border-orange-500/20 rounded-3xl p-6 shadow-[0_0_30px_rgba(249,115,22,0.15)]"
+      >
+
+        <div className="flex items-center justify-between">
+
+          <div>
+
+            <p className="text-zinc-500 text-sm uppercase tracking-widest mb-2">
+              Rank #{index + 1}
+            </p>
+
+            <h2 className="text-3xl font-black text-orange-400">
+              {user.name}
+            </h2>
+
+            <p className="text-zinc-400 mt-2">
+              {user.rank}
+            </p>
+
+          </div>
+
+          <div className="text-right">
+
+            <p className="text-cyan-400 font-black text-2xl">
+              LVL {user.level}
+            </p>
+
+            <p className="text-zinc-500 mt-2">
+              {user.xp} XP
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+    ))}
+
+  </motion.div>
+)}
   {/* DAILY */}
   {activeTab === "daily" && (
     <motion.div
