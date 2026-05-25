@@ -695,103 +695,100 @@ if (savedRerolls) {
   dailyQuests,
   rerollsLeft,
 ]);
-  useEffect(() => {
-    const today = new Date()
-      .toDateString();
+  
+   useEffect(() => {
+  const today = new Date();
 
-    const savedLastLogin =
-      localStorage.getItem(
-        "lastLogin"
-      );
+  const todayString =
+    today.toDateString();
 
-    const savedStreak =
+  const savedLastLogin =
+    localStorage.getItem(
+      "lastLogin"
+    );
+
+  const savedStreak =
+    Number(
       localStorage.getItem(
         "streak"
-      );
+      ) || 1
+    );
 
-    const savedBestStreak =
+  const savedBestStreak =
+    Number(
       localStorage.getItem(
         "bestStreak"
-      );
-
-    if (savedStreak) {
-      setStreak(Number(savedStreak));
-    }
-
-    if (savedBestStreak) {
-      setBestStreak(
-        Number(savedBestStreak)
-      );
-    }
-
-    if (!savedLastLogin) {
-      localStorage.setItem(
-        "lastLogin",
-        today
-      );
-
-      setLastLogin(today);
-
-      return;
-    }
-
-    const lastDate =
-      new Date(savedLastLogin);
-
-    const currentDate =
-      new Date(today);
-
-    const diffTime =
-      currentDate.getTime() -
-      lastDate.getTime();
-
-    const diffDays = Math.floor(
-      diffTime /
-        (1000 * 60 * 60 * 24)
+      ) || 1
     );
 
-    // NEXT DAY
-    if (diffDays === 1) {
-      const newStreak =
-        Number(savedStreak || 1) + 1;
+  setStreak(savedStreak);
+  setBestStreak(savedBestStreak);
 
-      setStreak(newStreak);
-
-      localStorage.setItem(
-        "streak",
-        String(newStreak)
-      );
-
-      if (
-        newStreak >
-        Number(savedBestStreak || 1)
-      ) {
-        setBestStreak(newStreak);
-
-        localStorage.setItem(
-          "bestStreak",
-          String(newStreak)
-        );
-      }
-    }
-
-    // MISSED DAY
-    if (diffDays > 1) {
-      setStreak(1);
-
-      localStorage.setItem(
-        "streak",
-        "1"
-      );
-    }
-
+  if (!savedLastLogin) {
     localStorage.setItem(
       "lastLogin",
-      today
+      todayString
     );
 
-    setLastLogin(today);
-  }, []);
+    return;
+  }
+
+  const lastDate = new Date(
+    savedLastLogin
+  );
+
+  // RESET HOURS
+  lastDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  const diffTime =
+    today.getTime() -
+    lastDate.getTime();
+
+  const diffDays =
+    diffTime /
+    (1000 * 60 * 60 * 24);
+
+  // NEXT DAY LOGIN
+  if (diffDays === 1) {
+    const newStreak =
+      savedStreak + 1;
+
+    setStreak(newStreak);
+
+    localStorage.setItem(
+      "streak",
+      String(newStreak)
+    );
+
+    if (
+      newStreak >
+      savedBestStreak
+    ) {
+      setBestStreak(newStreak);
+
+      localStorage.setItem(
+        "bestStreak",
+        String(newStreak)
+      );
+    }
+  }
+
+  // MISSED DAY
+  else if (diffDays > 1) {
+    setStreak(1);
+
+    localStorage.setItem(
+      "streak",
+      "1"
+    );
+  }
+
+  localStorage.setItem(
+    "lastLogin",
+    todayString
+  );
+}, []);
     useEffect(() => {
       setAchievementQuests((prev) =>
         prev.map((quest) => {
