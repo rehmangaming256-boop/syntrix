@@ -337,7 +337,38 @@ const [rerollsLeft, setRerollsLeft] =
       useState(0);
   const [activeTab, setActiveTab] =
   useState("daily");
-  
+  const leaderboard = [
+  {
+    name: "Shadow",
+    level: 52,
+    xp: 18200,
+    rank: "MYTHIC ⚡",
+  },
+  {
+    name: "Nova",
+    level: 41,
+    xp: 14020,
+    rank: "MASTER 👑",
+  },
+  {
+    name: "Zenith",
+    level: 33,
+    xp: 10900,
+    rank: "DIAMOND 🔷",
+  },
+  {
+    name: "Cipher",
+    level: 24,
+    xp: 7600,
+    rank: "PLATINUM 💎",
+  },
+  {
+    name: "Blaze",
+    level: 17,
+    xp: 4200,
+    rank: "GOLD 🥇",
+  },
+];  
       const xpSound =
     typeof Audio !== "undefined"
       ? new Audio("/sounds/xp.mp3")
@@ -512,52 +543,40 @@ const totalXP =
         : level >= 10
         ? "SILVER 🥈"
         : "BRONZE 🥉";
+const achievements: Achievement[] =
+  Array.from({ length: 10 }, (_, i) => {
+    const levelRequired = (i + 1) * 10;
 
-    const achievements: Achievement[] = [
-      {
-        title: "Focus Beginner",
-        description: "Reach Level 2",
-        unlocked: level >= 2,
-      },
+    let title = "";
 
-      {
-        title: "Discipline Beast",
-        description: "Reach Level 5",
-        unlocked: level >= 5,
-      },
+    if (levelRequired === 10) {
+      title = "Bronze Warrior 🥉";
+    } else if (levelRequired === 20) {
+      title = "Silver Champion 🥈";
+    } else if (levelRequired === 30) {
+      title = "Gold Elite 🥇";
+    } else if (levelRequired === 40) {
+      title = "Diamond Master 💎";
+    } else if (levelRequired === 50) {
+      title = "Mythic Lord ⚡";
+    } else if (levelRequired === 60) {
+      title = "Ascended King 👑";
+    } else if (levelRequired === 70) {
+      title = "Celestial Titan 🌌";
+    } else if (levelRequired === 80) {
+      title = "Void Conqueror 🕳️";
+    } else if (levelRequired === 90) {
+      title = "God Slayer 🔥";
+    } else if (levelRequired === 100) {
+      title = "SYNTRIX GOD ☠️";
+    }
 
-      {
-        title: "Neural Master",
-        description: "Reach Level 10",
-        unlocked: level >= 10,
-      },
-
-      {
-        title: "Legend",
-        description: "Reach Level 20",
-        unlocked: level >= 20,
-      },
-    ];
-  const leaderboard = [
-  {
-    name: "ShadowMind",
-    level: 18,
-    xp: 4200,
-    rank: "Discipline King 👑",
-  },
-  {
-    name: "NeoFocus",
-    level: 15,
-    xp: 3500,
-    rank: "Focus Beast ⚡",
-  },
-  {
-    name: "AlphaZen",
-    level: 14,
-    xp: 3100,
-    rank: "Dopamine Slayer 🔥",
-  },
-];
+    return {
+      title,
+      description: `Reach Level ${levelRequired}`,
+      unlocked: level >= levelRequired,
+    };
+  });
     function generateDailyQuests() {
     const shuffled = [...questPool]
       .sort(() => 0.5 - Math.random())
@@ -1389,9 +1408,14 @@ if (savedRerolls) {
               {quest.done
                 ? "COMPLETED"
                 : "COMPLETE QUEST"}
-            </button>
+            
+            </button> 
+          
           </div>
+        
         ))}
+
+     
       </div>
 
     </motion.div>
@@ -1464,6 +1488,22 @@ if (savedRerolls) {
             >
               DELETE
             </button>
+          {task.done && (
+  <button
+    onClick={() =>
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === task.id
+            ? { ...t, done: false }
+            : t
+        )
+      )
+    }
+    className="w-full mt-3 py-4 rounded-2xl font-black bg-yellow-500 hover:bg-yellow-400 text-black transition-all"
+  >
+    RESET QUEST
+  </button>
+)}
           </div>
         ))}
       </div>
@@ -1471,21 +1511,7 @@ if (savedRerolls) {
     </motion.div>
   )}
 
-  {/* FOCUS */}
-  {activeTab === "focus" && (
-    <motion.div
-      key="focus"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.35 }}
-    >
-      <FocusTimer
-        addXP={addXP}
-        attackBoss={attackBoss}
-      />
-    </motion.div>
-  )}
+  
 
   {/* ACHIEVEMENTS */}
   {activeTab === "achievement" && (
@@ -1500,7 +1526,11 @@ if (savedRerolls) {
       {achievements.map((achievement, index) => (
         <div
           key={index}
-          className="bg-yellow-500/10 border border-yellow-500/20 rounded-3xl p-6"
+          className={`rounded-3xl p-6 border transition-all ${
+  achievement.unlocked
+    ? "bg-green-500/10 border-green-400 shadow-[0_0_30px_rgba(74,222,128,0.4)]"
+    : "bg-zinc-900/70 border-zinc-700"
+}`}
         >
           <h3 className="text-2xl font-black mb-2">
             {achievement.title}
@@ -1509,6 +1539,17 @@ if (savedRerolls) {
           <p className="text-zinc-400">
             {achievement.description}
           </p>
+        <p
+  className={`mt-4 font-black ${
+    achievement.unlocked
+      ? "text-green-400"
+      : "text-zinc-500"
+  }`}
+>
+  {achievement.unlocked
+    ? "✅ ACHIEVED"
+    : "🔒 LOCKED"}
+</p>
         </div>
       ))}
     </motion.div>
