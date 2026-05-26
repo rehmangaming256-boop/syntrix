@@ -1,7 +1,10 @@
   "use client";
 
   import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+} from "framer-motion";
   type Task = {
     id: number;
     title: string;
@@ -319,10 +322,12 @@ useEffect(() => {
 
     const [bossHp, setBossHp] =
       useState(100);
-
+const [dailyBonusClaimed, setDailyBonusClaimed] =
+  useState(false);
     const [bossName, setBossName] =
       useState("TikTok Demon");
-
+const [questStreak, setQuestStreak] =
+  useState(0);
     const [taskInput, setTaskInput] =
       useState("");
   const [timeLeft, setTimeLeft] =
@@ -505,7 +510,29 @@ useEffect(() => {
         unlocked: false,
       },
     ]);
+useEffect(() => {
+  const allCompleted =
+    dailyQuests.length > 0 &&
+    dailyQuests.every(
+      (quest) => quest.done
+    );
 
+  if (
+    allCompleted &&
+    !dailyBonusClaimed
+  ) {
+    addXP(100);
+
+    setDailyBonusClaimed(true);
+
+    alert(
+      "🔥 DAILY STREAK BONUS +100 XP"
+    );
+  }
+}, [
+  dailyQuests,
+  dailyBonusClaimed,
+]);
     const requiredXP =
       50 + level * 25;
 const completedTasks =
@@ -578,31 +605,65 @@ const achievements: Achievement[] =
     };
   });
     function generateDailyQuests() {
-    const shuffled = [...questPool]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 5);
+  setDailyQuests((prevQuests) => {
+    // Keep completed quests
+    const completedQuests =
+      prevQuests.filter(
+        (quest) => quest.done
+      );
 
-    const quests = shuffled.map(
-      (quest, index) => ({
-        id: index + 1,
-        title: quest.title,
-        xp: quest.xp,
-        done: false,
-      })
-    );
+    // Get unfinished quests count
+    const unfinishedCount =
+      prevQuests.length -
+      completedQuests.length;
 
-    setDailyQuests(quests);
+    // Remove already used quest titles
+    const usedTitles =
+      completedQuests.map(
+        (q) => q.title
+      );
 
+    // Available quests
+    const availableQuests =
+      questPool.filter(
+        (quest) =>
+          !usedTitles.includes(
+            quest.title
+          )
+      );
+
+    // Randomize new quests
+    const newQuests =
+      availableQuests
+        .sort(() => 0.5 - Math.random())
+        .slice(0, unfinishedCount)
+        .map((quest, index) => ({
+          id:
+            Date.now() + index,
+          title: quest.title,
+          xp: quest.xp,
+          done: false,
+        }));
+
+    // Merge completed + new
+    const updatedQuests = [
+      ...completedQuests,
+      ...newQuests,
+    ];
+   setDailyBonusClaimed(false);
     localStorage.setItem(
       "dailyQuests",
-      JSON.stringify(quests)
+      JSON.stringify(updatedQuests)
     );
 
     localStorage.setItem(
       "lastQuestReset",
       new Date().toDateString()
     );
-  }
+
+    return updatedQuests;
+  });
+}
     useEffect(() => {
     const savedXP =
       localStorage.getItem("xp");
@@ -893,26 +954,40 @@ if (savedRerolls) {
     }
 
     function completeDailyQuest(id: number) {
-      setDailyQuests((prev) =>
-        prev.map((quest) => {
-          if (
-            quest.id === id &&
-            !quest.done
-          ) {
-            addXP(quest.xp);
+  setDailyQuests((prev) =>
+    prev.map((quest) => {
+      if (
+        quest.id === id &&
+        !quest.done
+      ) {
+        addXP(quest.xp);
 
-            attackBoss();
+        attackBoss();
 
-            return {
-              ...quest,
-              done: true,
-            };
-          }
+        const newStreak =
+          questStreak + 1;
 
-          return quest;
-        })
-      );
-    }
+        setQuestStreak(newStreak);
+
+        // STREAK BONUS
+        if (newStreak % 5 === 0) {
+          addXP(50);
+
+          alert(
+            `🔥 QUEST STREAK BONUS +50 XP`
+          );
+        }
+
+        return {
+          ...quest,
+          done: true,
+        };
+      }
+
+      return quest;
+    })
+  );
+}
 
     function addTask() {
       if (!taskInput.trim()) return;
@@ -1042,14 +1117,20 @@ if (savedRerolls) {
 
         <div className="relative z-10 p-5 md:p-10 pb-32">
          {/* REPORT BUG BUTTON */}
-<a
-  href="https://docs.google.com/forms/d/e/1FAIpQLSdB7peb3nb-ImvUsB4-yK9NO-0QdOzlk_SZfIDOFPlN5aN5HQ/viewform?usp=dialog"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="fixed top-6 right-6 z-50 bg-red-500 hover:bg-red-400 text-white font-black px-5 py-3 rounded-2xl shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all hover:scale-105 text-sm md:text-base"
->
-  🐞 Report Bug
-</a>
+{/* REPORT BUG BUTTON */}
+<div className="fixed top-6 right-6 z-[9999]">
+{/* REPORT BUG BUTTON */}
+<div className="fixed top-6 right-6 z-[9999]">
+  <a
+    href="https://docs.google.com/forms/d/e/1FAIpQLSdB7peb3nb-ImvUsB4-yK9NO-0QdOzlk_SZfIDOFPlN5aN5HQ/viewform?usp=dialog"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="bg-red-500 hover:bg-red-400 text-white font-black px-5 py-3 rounded-2xl shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all hover:scale-105 text-sm md:text-base block"
+  >
+    🐞 Report Bug
+  </a>
+</div>
+</div>
           {/* HEADER */}
           
           <div className="mb-10">
@@ -1354,7 +1435,7 @@ if (savedRerolls) {
             if (rerollsLeft <= 0) return;
 
             generateDailyQuests();
-
+            setQuestStreak(0);
             setRerollsLeft((prev) => prev - 1);
           }}
           disabled={rerollsLeft <= 0}
@@ -1371,17 +1452,48 @@ if (savedRerolls) {
       <p className="text-zinc-400 mb-6 text-sm tracking-widest uppercase">
         Resets in {timeLeft}
       </p>
+<div className="bg-zinc-900/70 backdrop-blur-xl border border-orange-500/20 rounded-3xl p-6 mb-6 shadow-[0_0_30px_rgba(249,115,22,0.15)]">
 
+  <p className="text-orange-400 text-sm uppercase tracking-[0.3em] mb-2">
+    Quest Combo
+  </p>
+
+  <h2 className="text-5xl font-black text-white">
+    🔥 {questStreak}
+  </h2>
+
+  <p className="text-zinc-400 mt-2">
+    Every 5 completed quests = +50 XP bonus
+  </p>
+
+</div>
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
-        {dailyQuests.map((quest) => (
-          <div
-            key={quest.id}
-            className={`backdrop-blur-xl rounded-3xl p-8 border transition-all duration-300 ${
-              quest.done
-                ? "bg-green-500/10 border-green-400 shadow-[0_0_40px_rgba(74,222,128,0.5)] scale-[1.02]"
-                : "bg-zinc-900/70 border-purple-500/20 hover:border-purple-400"
-            }`}
-          >
+     {dailyQuests.map((quest) => (
+  <AnimatePresence key={quest.id}>
+    <motion.div
+      initial={{
+        opacity: 0,
+        scale: 0.9,
+        y: 20,
+      }}
+      animate={{
+        opacity: 1,
+        scale: 1,
+        y: 0,
+      }}
+      exit={{
+        opacity: 0,
+        scale: 0.9,
+      }}
+      transition={{
+        duration: 0.35,
+      }}
+      className={`backdrop-blur-xl rounded-3xl p-8 border transition-all duration-300 ${
+        quest.done
+          ? "bg-green-500/10 border-green-400 shadow-[0_0_40px_rgba(74,222,128,0.5)] scale-[1.02]"
+          : "bg-zinc-900/70 border-purple-500/20 hover:border-purple-400"
+      }`}
+    > 
             <h3 className="text-3xl font-black mb-4">
               {quest.title}
             </h3>
@@ -1407,16 +1519,14 @@ if (savedRerolls) {
                 : "COMPLETE QUEST"}
             
             </button> 
-          
-          </div>
-        
-        ))}
-
+              </motion.div>
+  </AnimatePresence>
+           ))}
+</div>
+</motion.div>
+)}
      
-      </div>
-
-    </motion.div>
-  )}
+   
 
   {/* CUSTOM */}
   {activeTab === "custom" && (
