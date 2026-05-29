@@ -19,12 +19,7 @@ import {
     done: boolean;
   };
 
-  type AchievementQuest = {
-    id: number;
-    title: string;
-    xp: number;
-    unlocked: boolean;
-  };
+  
 
   type Achievement = {
     title: string;
@@ -77,13 +72,11 @@ import {
     );
   }
 
-  function FocusTimer({ 
-    addXP,
-    attackBoss,
-  }: {
-    addXP: (amount: number) => void;
-    attackBoss: () => void;
-  }) {
+  function FocusTimer({
+  addXP,
+}: {
+  addXP: (amount: number) => void;
+}) {
     const [minutesInput, setMinutesInput] =
   useState(25);
 
@@ -106,7 +99,7 @@ const [time, setTime] = useState(25 * 60);
 
         addXP(25);
 
-        attackBoss();
+        
 
         alert(
           "⚡ Focus Session Complete +25 XP"
@@ -116,13 +109,13 @@ const [time, setTime] = useState(25 * 60);
       }
 
       return () => clearInterval(interval);
-    }, [
-      running,
-      time,
-      addXP,
-      attackBoss,
-      minutesInput,
-    ]);
+    }, 
+   [
+  running,
+  time,
+  addXP,
+  minutesInput,
+]);
 
     const minutes = Math.floor(time / 60);
 
@@ -157,7 +150,7 @@ const [time, setTime] = useState(25 * 60);
               onClick={() =>
                 setTime(minutesInput * 60)
               }
-              className="bg-purple-500 hover:bg-purple-400 transition-all px-5 py-2 rounded-xl font-bold hover:scale-105"
+              className="bg-purple-500 hover:bg-purple-400 transition-all px-5 py-2 rounded-xl font-bold hover:scale-105 active:scale-95"
             >
               Set
             </button>
@@ -177,14 +170,14 @@ const [time, setTime] = useState(25 * 60);
 
           <button
             onClick={() => setRunning(true)}
-            className="bg-purple-500 hover:bg-purple-400 transition-all px-6 py-3 rounded-xl font-bold shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:scale-105"
+            className="bg-purple-500 hover:bg-purple-400 transition-all px-6 py-3 rounded-xl font-bold shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:scale-105 active:scale-95"
           >
             Start
           </button>
 
           <button
             onClick={() => setRunning(false)}
-            className="bg-zinc-700 hover:bg-zinc-600 transition-all px-6 py-3 rounded-xl font-bold hover:scale-105"
+            className="bg-zinc-700 hover:bg-zinc-600 transition-all px-6 py-3 rounded-xl font-bold hover:scale-105 active:scale-95"
           >
             Pause
           </button>
@@ -194,7 +187,7 @@ const [time, setTime] = useState(25 * 60);
               setRunning(false);
               setTime(minutesInput * 60);
             }}
-            className="bg-zinc-700 hover:bg-zinc-600 transition-all px-6 py-3 rounded-xl font-bold hover:scale-105"
+            className="bg-zinc-700 hover:bg-zinc-600 transition-all px-6 py-3 rounded-xl font-bold hover:scale-105 active:scale-95"
           >
             Reset
           </button>
@@ -286,10 +279,53 @@ const [time, setTime] = useState(25 * 60);
     xp: 50,
   },
 ];
+const shopItems = [
+  {
+    id: 0,
+    name: "Default",
+    price: 0,
+    type: "theme",
+  },
+  {
+    id: 1,
+    name: "Cyber Purple",
+    price: 250,
+    type: "theme",
+  },
+  {
+    id: 2,
+    name: "Neon Blue",
+    price: 400,
+    type: "theme",
+  },
+  {
+    id: 3,
+    name: "2x XP Boost",
+    price: 300,
+    type: "boost",
+  },
+  {
+    id: 4,
+    name: "Streak Shield",
+    price: 500,
+    type: "shield",
+  },
+];
+ 
+export default function Home() {
+   
+  const [xp, setXp] = useState(0);
 
-  export default function Home() {
-    const [xp, setXp] = useState(0);
-const dailyQuotes = [
+const [coins, setCoins] =
+  useState(0);
+
+const [ownedThemes, setOwnedThemes] =
+  useState<string[]>(["Default"]);
+
+const [activeTheme, setActiveTheme] =
+  useState("Default");
+    
+  const dailyQuotes = [
   "Discipline is choosing your future over comfort.",
   "Small progress is still progress.",
   "Your habits shape your identity.",
@@ -320,12 +356,10 @@ useEffect(() => {
     const [level, setLevel] =
       useState(1);
 
-    const [bossHp, setBossHp] =
-      useState(100);
+    
 const [dailyBonusClaimed, setDailyBonusClaimed] =
   useState(false);
-    const [bossName, setBossName] =
-      useState("TikTok Demon");
+   
 const [questStreak, setQuestStreak] =
   useState(0);
     const [taskInput, setTaskInput] =
@@ -335,8 +369,7 @@ const [questStreak, setQuestStreak] =
 const [rerollsLeft, setRerollsLeft] =
   useState(3);
   
-    const [showAchievements, setShowAchievements] =
-      useState(false);
+    
 
     const [floatingXP, setFloatingXP] =
       useState(0);
@@ -384,16 +417,22 @@ const [rerollsLeft, setRerollsLeft] =
       ? new Audio("/sounds/levelup.mp3")
       : null;
 
-  const bossSound =
-    typeof Audio !== "undefined"
-      ? new Audio("/sounds/boss.mp3")
-      : null;
-
+  
   const clickSound =
     typeof Audio !== "undefined"
       ? new Audio("/sounds/click.mp3")
       : null; 
-     
+     function playSound(
+  sound: HTMLAudioElement | null
+) {
+  if (!sound) return;
+
+  sound.currentTime = 0;
+
+  sound.play().catch((err) => {
+    console.log("Sound blocked:", err);
+  });
+}
       const [streak, setStreak] = useState(1);
   
 
@@ -485,31 +524,7 @@ useEffect(() => {
         done: false,
       },
     ]);
-    const [
-      achievementQuests,
-      setAchievementQuests,
-    ] = useState<AchievementQuest[]>([
-      {
-        id: 1,
-        title: "Reach Level 5",
-        xp: 100,
-        unlocked: false,
-      },
-
-      {
-        id: 2,
-        title: "Reach Level 10",
-        xp: 200,
-        unlocked: false,
-      },
-
-      {
-        id: 3,  
-        title: "Complete 25 Tasks",
-        xp: 150,
-        unlocked: false,
-      },
-    ]);
+    
 useEffect(() => {
   const allCompleted =
     dailyQuests.length > 0 &&
@@ -659,6 +674,7 @@ const achievements: Achievement[] =
     localStorage.setItem(
       "lastQuestReset",
       new Date().toDateString()
+    
     );
 
     return updatedQuests;
@@ -679,7 +695,18 @@ if (savedRerolls) {
 }
     const savedLevel =
       localStorage.getItem("level");
+const savedCoins =
+  localStorage.getItem("coins");
 
+const savedThemes =
+  localStorage.getItem(
+    "ownedThemes"
+  );
+
+const savedActiveTheme =
+  localStorage.getItem(
+    "activeTheme"
+  );
     const savedTasks =
       localStorage.getItem("tasks");
 
@@ -699,7 +726,16 @@ if (savedRerolls) {
 
     if (savedLevel)
       setLevel(Number(savedLevel));
+if (savedCoins)
+  setCoins(Number(savedCoins));
 
+if (savedThemes)
+  setOwnedThemes(
+    JSON.parse(savedThemes)
+  );
+
+if (savedActiveTheme)
+  setActiveTheme(savedActiveTheme);
     if (savedTasks)
       setTasks(JSON.parse(savedTasks));
 
@@ -722,32 +758,49 @@ if (savedRerolls) {
         JSON.parse(savedDailyQuests)
       );
     }
+    
   }, []);
 
-    useEffect(() => {
-      localStorage.setItem(
-        "xp",
-        String(xp)
-      );
+  useEffect(() => {
+  localStorage.setItem(
+    "xp",
+    String(xp)
+  );
 
-      localStorage.setItem(
-        "level",
-        String(level)
-      );
+  localStorage.setItem(
+    "level",
+    String(level)
+  );
 
-      localStorage.setItem(
-        "tasks",
-        JSON.stringify(tasks)
-      );
-    localStorage.setItem(
+  localStorage.setItem(
+    "tasks",
+    JSON.stringify(tasks)
+  );
+
+  localStorage.setItem(
     "dailyQuests",
     JSON.stringify(dailyQuests)
   );
 
   localStorage.setItem(
-  "rerollsLeft",
-  String(rerollsLeft)
-);
+    "rerollsLeft",
+    String(rerollsLeft)
+  );
+
+  localStorage.setItem(
+    "coins",
+    String(coins)
+  );
+
+  localStorage.setItem(
+    "ownedThemes",
+    JSON.stringify(ownedThemes)
+  );
+
+  localStorage.setItem(
+    "activeTheme",
+    activeTheme
+  );
 
 }, [
   xp,
@@ -755,6 +808,9 @@ if (savedRerolls) {
   tasks,
   dailyQuests,
   rerollsLeft,
+  coins,
+  ownedThemes,
+  activeTheme,
 ]);
   
    useEffect(() => {
@@ -850,108 +906,47 @@ if (savedRerolls) {
     todayString
   );
 }, []);
-    useEffect(() => {
-      setAchievementQuests((prev) =>
-        prev.map((quest) => {
-          if (
-            quest.title ===
-              "Reach Level 5" &&
-            level >= 5
-          ) {
-            return {
-              ...quest,
-              unlocked: true,
-            };
-          }
-
-          if (
-            quest.title ===
-              "Reach Level 10" &&
-            level >= 10
-          ) {
-            return {
-              ...quest,
-              unlocked: true,
-            };
-          }
-
-          if (
-            quest.title ===
-              "Complete 25 Tasks" &&
-            tasks.filter((t) => t.done)
-              .length >= 25
-          ) {
-            return {
-              ...quest,
-              unlocked: true,
-            };
-          }
-
-          return quest;
-        })
-      );
-    }, [level, tasks]);
+   
   function addXP(amount: number) {
-    setFloatingXP(amount);
-      xpSound?.play();
-    setTimeout(() => {
-      setFloatingXP(0);
-    }, 1500);
+  setFloatingXP(amount);
 
-    setXp((prevXP) => {
-      let totalXP = prevXP + amount;
+  setCoins((prev) =>
+    prev + Math.floor(amount / 2)
+  );
 
-      if (totalXP >= requiredXP) {
-        totalXP -= requiredXP;
+  playSound(xpSound);
 
-        setLevel((prev) => prev + 1);
+  setTimeout(() => {
+    setFloatingXP(0);
+  }, 1500);
 
-        setShowLevelUp(true);
-            levelSound?.play();
-        setTimeout(() => {
-          setShowLevelUp(false);
-        }, 3000);
-      }
+  setXp((prevXP) => {
+    let totalXP = prevXP + amount;
+    let newLevel = level;
 
-      return totalXP;
-    });
-  }
-    function attackBoss() {
-      setBossHp((prev) => {
-        const newHp = prev - 20;
+    while (
+      totalXP >=
+      50 + newLevel * 25
+    ) {
+      totalXP -=
+        50 + newLevel * 25;
 
-        if (newHp <= 0) {
-          addXP(150);
-        bossSound?.play();
-          alert(
-            `🏆 ${bossName} Defeated`
-          );
+      newLevel++;
+playSound(levelSound);
 
-          if (
-            bossName === "TikTok Demon"
-          ) {
-            setBossName(
-              "YouTube Monster"
-            );
-          } else if (
-            bossName ===
-            "YouTube Monster"
-          ) {
-            setBossName(
-              "Netflix Beast"
-            );
-          } else {
-            setBossName(
-              "TikTok Demon"
-            );
-          }
+      setShowLevelUp(true);
 
-          return 100;
-        }
-
-        return newHp;
-      });
+      setTimeout(() => {
+        setShowLevelUp(false);
+      }, 3000);
     }
+
+    setLevel(newLevel);
+
+    return totalXP;
+  });
+}
+  
 
     function completeDailyQuest(id: number) {
   setDailyQuests((prev) =>
@@ -962,7 +957,7 @@ if (savedRerolls) {
       ) {
         addXP(quest.xp);
 
-        attackBoss();
+       
 
         const newStreak =
           questStreak + 1;
@@ -1016,7 +1011,7 @@ if (savedRerolls) {
           ) {
             addXP(task.xp);
 
-            attackBoss();
+            
 
             return {
               ...task,
@@ -1030,7 +1025,17 @@ if (savedRerolls) {
     }
 
     return (
-      <main className="min-h-screen bg-black text-white relative overflow-hidden selection:bg-purple-500/40">
+      <main
+  className={`min-h-screen text-white relative overflow-hidden selection:bg-purple-500/40 ${
+    activeTheme ===
+    "Cyber Purple"
+      ? "bg-purple-950"
+      : activeTheme ===
+        "Neon Blue"
+      ? "bg-cyan-950"
+      : "bg-black"
+  }`}
+>
   {/* LEVEL UP POPUP */}
 
   {showLevelUp && (
@@ -1117,20 +1122,19 @@ if (savedRerolls) {
 
         <div className="relative z-10 p-5 md:p-10 pb-32">
          {/* REPORT BUG BUTTON */}
-{/* REPORT BUG BUTTON */}
-<div className="fixed top-6 right-6 z-[9999]">
+
 {/* REPORT BUG BUTTON */}
 <div className="fixed top-6 right-6 z-[9999]">
   <a
     href="https://docs.google.com/forms/d/e/1FAIpQLSdB7peb3nb-ImvUsB4-yK9NO-0QdOzlk_SZfIDOFPlN5aN5HQ/viewform?usp=dialog"
     target="_blank"
     rel="noopener noreferrer"
-    className="bg-red-500 hover:bg-red-400 text-white font-black px-5 py-3 rounded-2xl shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all hover:scale-105 text-sm md:text-base block"
+    className="bg-red-500 hover:bg-red-400 text-white font-black px-5 py-3 rounded-2xl shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all hover:scale-105 active:scale-95 text-sm md:text-base block"
   >
     🐞 Report Bug
   </a>
 </div>
-</div>
+
           {/* HEADER */}
           
           <div className="mb-10">
@@ -1217,27 +1221,48 @@ if (savedRerolls) {
   </h2>
 
 </div>
-          {/* XP */}
-          <div className="bg-zinc-900/70 backdrop-blur-xl border border-purple-500/20 rounded-3xl p-6 md:p-8 mb-10 shadow-[0_0_40px_rgba(168,85,247,0.15)] hover:border-purple-400 transition-all">
+          {/* XP CARD */}
+<div className="bg-zinc-900/70 backdrop-blur-xl border border-purple-500/20 rounded-3xl p-6 md:p-8 mb-10 shadow-[0_0_40px_rgba(168,85,247,0.15)] hover:border-purple-400 transition-all">
 
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
 
-              <span className="text-purple-400 font-black text-2xl md:text-3xl">
-                Level {level}
-              </span>
+    <span className="text-purple-400 font-black text-2xl md:text-3xl">
+      Level {level}
+    </span>
 
-              <span className="text-zinc-400 text-lg">
-                {currentRank}
-              </span>
+    <span className="text-zinc-400 text-lg">
+      {currentRank}
+    </span>
 
-            </div>
+  </div>
 
-            <XPBar
-              xp={xp}
-              requiredXP={requiredXP}
-            />
+  <XPBar
+    xp={xp}
+    requiredXP={requiredXP}
+  />
 
-          </div>
+</div>
+
+{/* COINS CARD */}
+<div className="bg-zinc-900/70 backdrop-blur-xl border border-yellow-500/20 rounded-3xl p-6 mb-10 shadow-[0_0_30px_rgba(250,204,21,0.15)]">
+
+  <div className="flex items-center justify-between">
+
+    <div>
+
+      <p className="text-yellow-400 text-sm uppercase tracking-[0.3em] mb-2">
+        Syn Coins
+      </p>
+
+      <h2 className="text-5xl font-black text-white">
+        💰 {coins}
+      </h2>
+
+    </div>
+
+  </div>
+
+</div>
 {/* STATISTICS DASHBOARD */}
 
 <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5 mb-10">
@@ -1300,7 +1325,7 @@ if (savedRerolls) {
 {activeTab === "focus" && (
   <FocusTimer
     addXP={addXP}
-    attackBoss={attackBoss}
+    
   />
 )}
 {/* TAB BUTTONS */}
@@ -1349,20 +1374,30 @@ if (savedRerolls) {
   >
     Achievement
   </button>
-<button
-  onClick={() =>
-    setActiveTab("leaderboard")
-  }
-  className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold whitespace-nowrap transition-all ${
-    activeTab === "leaderboard"
-      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
-      : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-  }`}
->
-  Leaderboard
-</button>
-</div>
 
+  <button
+    onClick={() => setActiveTab("leaderboard")}
+    className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold whitespace-nowrap transition-all ${
+      activeTab === "leaderboard"
+        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+    }`}
+  >
+    Leaderboard
+  </button>
+
+  <button
+    onClick={() => setActiveTab("shop")}
+    className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold whitespace-nowrap transition-all ${
+      activeTab === "shop"
+        ? "bg-green-500 text-black shadow-lg shadow-green-500/30"
+        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+    }`}
+  >
+    Shop
+  </button>
+
+</div>
 {/* TAB CONTENT */}
 <AnimatePresence mode="wait">
 {/* LEADERBOARD */}
@@ -1419,81 +1454,113 @@ if (savedRerolls) {
 
   </motion.div>
 )}
-  {/* DAILY */}
-  {activeTab === "daily" && (
-    <motion.div
-      key="daily"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.35 }}
-    >
+ 
+ 
+ {/* DAILY */}
+{activeTab === "daily" && (
+  <motion.div
+    key="daily"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+    transition={{ duration: 0.35 }}
+  >
 
-      <div className="flex justify-start mb-5">
-        <button
-          onClick={() => {
-            if (rerollsLeft <= 0) return;
+    <div className="flex justify-start mb-5">
 
-            generateDailyQuests();
-            setQuestStreak(0);
-            setRerollsLeft((prev) => prev - 1);
-          }}
-          disabled={rerollsLeft <= 0}
-          className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold transition-all ${
-            rerollsLeft <= 0
-              ? "bg-zinc-700 text-zinc-500"
-              : "bg-purple-500 hover:bg-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.4)]"
-          }`}
-        >
-          🔄 Reroll ({rerollsLeft})
-        </button>
-      </div>
+      <button
+        onClick={() => {
+          const allCompleted =
+            dailyQuests.every(
+              (quest) => quest.done
+            );
 
-      <p className="text-zinc-400 mb-6 text-sm tracking-widest uppercase">
-        Resets in {timeLeft}
+          if (
+            rerollsLeft <= 0 ||
+            allCompleted
+          )
+            return;
+
+          generateDailyQuests();
+
+          setQuestStreak(0);
+
+          setRerollsLeft(
+            (prev) => prev - 1
+          );
+        }}
+        disabled={
+          rerollsLeft <= 0 ||
+          dailyQuests.every(
+            (quest) => quest.done
+          )
+        }
+        className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold transition-all ${
+          rerollsLeft <= 0 ||
+          dailyQuests.every(
+            (quest) => quest.done
+          )
+            ? "bg-zinc-700 text-zinc-500"
+            : "bg-purple-500 hover:bg-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.4)]"
+        }`}
+      >
+        🔄 Reroll ({rerollsLeft})
+      </button>
+
+    </div>
+
+    <p className="text-zinc-400 mb-6 text-sm tracking-widest uppercase">
+      Resets in {timeLeft}
+    </p>
+
+    <div className="bg-zinc-900/70 backdrop-blur-xl border border-orange-500/20 rounded-3xl p-6 mb-6 shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+
+      <p className="text-orange-400 text-sm uppercase tracking-[0.3em] mb-2">
+        Quest Combo
       </p>
-<div className="bg-zinc-900/70 backdrop-blur-xl border border-orange-500/20 rounded-3xl p-6 mb-6 shadow-[0_0_30px_rgba(249,115,22,0.15)]">
 
-  <p className="text-orange-400 text-sm uppercase tracking-[0.3em] mb-2">
-    Quest Combo
-  </p>
+      <h2 className="text-5xl font-black text-white">
+        🔥 {questStreak}
+      </h2>
 
-  <h2 className="text-5xl font-black text-white">
-    🔥 {questStreak}
-  </h2>
+      <p className="text-zinc-400 mt-2">
+        Every 5 completed quests = +50 XP bonus
+      </p>
 
-  <p className="text-zinc-400 mt-2">
-    Every 5 completed quests = +50 XP bonus
-  </p>
+    </div>
 
-</div>
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
-     {dailyQuests.map((quest) => (
-  <AnimatePresence key={quest.id}>
-    <motion.div
-      initial={{
-        opacity: 0,
-        scale: 0.9,
-        y: 20,
-      }}
-      animate={{
-        opacity: 1,
-        scale: 1,
-        y: 0,
-      }}
-      exit={{
-        opacity: 0,
-        scale: 0.9,
-      }}
-      transition={{
-        duration: 0.35,
-      }}
-      className={`backdrop-blur-xl rounded-3xl p-8 border transition-all duration-300 ${
-        quest.done
-          ? "bg-green-500/10 border-green-400 shadow-[0_0_40px_rgba(74,222,128,0.5)] scale-[1.02]"
-          : "bg-zinc-900/70 border-purple-500/20 hover:border-purple-400"
-      }`}
-    > 
+    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+      <AnimatePresence>
+
+        {dailyQuests.map((quest) => (
+
+          <motion.div
+            key={quest.id}
+            initial={{
+              opacity: 0,
+              scale: 0.9,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.9,
+            }}
+            transition={{
+              duration: 0.35,
+            }}
+            className={`backdrop-blur-xl rounded-3xl p-8 border transition-all duration-300 ${
+              quest.done
+                ? "bg-green-500/10 border-green-400 shadow-[0_0_40px_rgba(74,222,128,0.5)] scale-[1.02]"
+                : "bg-zinc-900/70 border-purple-500/20 hover:border-purple-400"
+            }`}
+          >
+
             <h3 className="text-3xl font-black mb-4">
               {quest.title}
             </h3>
@@ -1504,7 +1571,7 @@ if (savedRerolls) {
 
             <button
               onClick={() => {
-                clickSound?.play();
+                playSound(clickSound);
                 completeDailyQuest(quest.id);
               }}
               disabled={quest.done}
@@ -1517,108 +1584,114 @@ if (savedRerolls) {
               {quest.done
                 ? "COMPLETED"
                 : "COMPLETE QUEST"}
-            
-            </button> 
-              </motion.div>
-  </AnimatePresence>
-           ))}
-</div>
-</motion.div>
-)}
-     
-   
-
-  {/* CUSTOM */}
-  {activeTab === "custom" && (
-    <motion.div
-      key="custom"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.35 }}
-      className="mb-10"
-    >
-
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <input
-          value={taskInput}
-          onChange={(e) =>
-            setTaskInput(e.target.value)
-          }
-          placeholder="Create mission..."
-          className="bg-zinc-900 border border-cyan-500/20 rounded-xl px-4 py-3 text-sm md:text-base outline-none w-full"
-        />
-
-        <button
-          onClick={addTask}
-          className="bg-cyan-500 text-black px-4 py-3 text-sm md:text-base rounded-xl font-bold"
-        >
-          Add
-        </button>
-      </div>
-
-      <div className="grid gap-5">
-        {tasks.map((task) => (
-          <div
-            key={task.id}
-            className="bg-zinc-900/70 border border-cyan-500/20 rounded-3xl p-6"
-          >
-            <h3 className="text-2xl font-black mb-3">
-              {task.title}
-            </h3>
-
-            <button
-              onClick={() =>
-                completeTask(task.id)
-              }
-              disabled={task.done}
-              className={`w-full py-4 rounded-2xl font-black ${
-                task.done
-                  ? "bg-green-500 text-black"
-                  : "bg-cyan-500 text-black"
-              }`}
-            >
-              {task.done
-                ? "COMPLETED"
-                : "COMPLETE"}
             </button>
 
-            <button
-              onClick={() =>
-                setTasks((prev) =>
-                  prev.filter(
-                    (t) => t.id !== task.id
-                  )
-                )
-              }
-              className="w-full mt-3 py-4 rounded-2xl font-black bg-red-500 hover:bg-red-400 transition-all"
-            >
-              DELETE
-            </button>
-          {task.done && (
-  <button
-    onClick={() =>
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === task.id
-            ? { ...t, done: false }
-            : t
-        )
-      )
-    }
-    className="w-full mt-3 py-4 rounded-2xl font-black bg-yellow-500 hover:bg-yellow-400 text-black transition-all"
-  >
-    RESET QUEST
-  </button>
-)}
-          </div>
+          </motion.div>
+
         ))}
-      </div>
 
-    </motion.div>
-  )}
+      </AnimatePresence>
 
-  
+    </div>
+
+  </motion.div>
+)}
+
+  {activeTab === "shop" && (
+  <motion.div
+    key="shop"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+    transition={{ duration: 0.35 }}
+    className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 mb-10"
+  >
+
+    {shopItems.map((item) => {
+      const owned =
+        ownedThemes.includes(item.name);
+
+      return (
+        <div
+          key={item.id}
+          className="bg-zinc-900/70 backdrop-blur-xl border border-green-500/20 rounded-3xl p-6 shadow-[0_0_30px_rgba(34,197,94,0.15)]"
+        >
+
+          <h2 className="text-3xl font-black text-green-400 mb-3">
+            {item.name}
+          </h2>
+
+          <p className="text-zinc-400 mb-6">
+            Cost: {item.price} Coins
+          </p>
+
+          <button
+  onClick={() => {
+    // THEME SYSTEM
+    if (item.type === "theme") {
+      // FREE DEFAULT THEME
+      if (item.name === "Default") {
+        setActiveTheme("Default");
+        return;
+      }
+
+      // OWNED THEMES → JUST ACTIVATE
+      if (owned) {
+        setActiveTheme(item.name);
+        return;
+      }
+
+      // BUY THEME
+      if (coins < item.price) return;
+
+      setCoins((prev) => prev - item.price);
+
+      setOwnedThemes((prev) => [
+        ...prev,
+        item.name,
+      ]);
+
+      setActiveTheme(item.name);
+
+      alert(`Purchased ${item.name}`);
+      return;
+    }
+
+    // XP BOOST
+    if (item.type === "boost") {
+      if (coins < item.price) return;
+
+      setCoins((prev) => prev - item.price);
+
+      addXP(100);
+
+      alert(`Purchased ${item.name}`);
+    }
+  }}
+  className={`w-full py-4 rounded-2xl font-black transition-all ${
+    coins < item.price &&
+    !owned &&
+    item.name !== "Default"
+      ? "bg-zinc-700 text-zinc-500"
+      : "bg-green-500 hover:bg-green-400 text-black"
+  }`}
+>
+  {item.type === "theme" &&
+  activeTheme === item.name
+    ? "ACTIVE"
+    : owned
+    ? "USE"
+    : item.name === "Default"
+    ? "USE"
+    : "BUY"}
+</button>
+
+        </div>
+      );
+    })}
+
+  </motion.div>
+)}
 
   {/* ACHIEVEMENTS */}
   {activeTab === "achievement" && (
@@ -1664,56 +1737,7 @@ if (savedRerolls) {
 
 </AnimatePresence>
   
-          {/* MODAL */}
-          {showAchievements && (
-  <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 overflow-y-auto p-5 md:p-10">
-
-    <div className="max-w-5xl mx-auto">
-
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 mb-10">
-
-        <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-          Achievements
-        </h1>
-
-        <button
-          onClick={() => setShowAchievements(false)}
-          className="bg-red-500 hover:bg-red-400 transition-all px-6 py-3 rounded-xl font-bold w-fit"
-        >
-          Close
-        </button>
-
-      </div>
-
-      <div className="grid gap-5">
-
-        {achievements
-          .filter((achievement) => achievement.unlocked)
-          .map((achievement, index) => (
-            <div
-              key={index}
-              className="rounded-3xl p-6 border bg-yellow-500/10 border-yellow-500/20 backdrop-blur-xl"
-            >
-
-              <h2 className="text-2xl font-black mb-2">
-                {achievement.title}
-              </h2>
-
-              <p className="text-zinc-400">
-                {achievement.description}
-              </p>
-
-            </div>
-          ))}
-
-      
-
-                    </div>
-
-              </div>
-
-            </div>
-          )}
+          
 {/* FLOATING MOBILE NAVBAR */}  
 </div> {/* closes relative z-10 */}
 
