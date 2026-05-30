@@ -1,10 +1,7 @@
-  "use client";
+"use client";
 
-  import { useEffect, useState } from "react";
-import {
-  motion,
-  AnimatePresence,
-} from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
   type Task = {
     id: number;
     title: string;
@@ -80,7 +77,7 @@ import {
     const [minutesInput, setMinutesInput] =
   useState(25);
 
-const [time, setTime] = useState(25 * 60);
+  const [time, setTime] = useState(25 * 60);
 
     const [running, setRunning] =
       useState(false);
@@ -313,7 +310,22 @@ const shopItems = [
 ];
  
 export default function Home() {
-   
+  const [avatar, setAvatar] =
+  useState("⚡");
+
+const [username, setUsername] =
+  useState("SYNTRIX USER");
+
+const avatars = [
+  "⚡",
+  "🔥",
+  "👑",
+  "💎",
+  "🐉",
+  "🤖",
+  "🌌",
+  "☠️",
+]; 
   const [xp, setXp] = useState(0);
 
 const [coins, setCoins] =
@@ -370,6 +382,9 @@ const [rerollsLeft, setRerollsLeft] =
   useState(3);
   
     
+
+  
+
 
     const [floatingXP, setFloatingXP] =
       useState(0);
@@ -559,7 +574,8 @@ const completedTasks =
 const totalTasks =
   tasks.length +
   dailyQuests.length;
-
+const totalXP =
+  (level - 1) * 100 + xp;
 const completionRate =
   totalTasks > 0
     ? Math.round(
@@ -569,8 +585,14 @@ const completionRate =
       )
     : 0;
 
-const totalXP =
-  level * requiredXP + xp;
+const [mounted, setMounted] =
+  useState(false);
+
+useEffect(() => {
+  setMounted(true);
+}, []);
+
+
     const currentRank =
       level >= 50
         ? "MYTHIC ⚡"
@@ -706,7 +728,10 @@ const savedThemes =
 const savedActiveTheme =
   localStorage.getItem(
     "activeTheme"
+  
+  
   );
+
     const savedTasks =
       localStorage.getItem("tasks");
 
@@ -736,7 +761,17 @@ if (savedThemes)
 
 if (savedActiveTheme)
   setActiveTheme(savedActiveTheme);
-    if (savedTasks)
+    const savedAvatar =
+  localStorage.getItem("avatar");
+const savedUsername =
+  localStorage.getItem("username");
+
+if (savedUsername) {
+  setUsername(savedUsername);
+}
+if (savedAvatar)
+  setAvatar(savedAvatar);
+if (savedTasks)
       setTasks(JSON.parse(savedTasks));
 
     if (
@@ -797,10 +832,21 @@ if (savedActiveTheme)
     JSON.stringify(ownedThemes)
   );
 
-  localStorage.setItem(
-    "activeTheme",
-    activeTheme
-  );
+
+localStorage.setItem(
+  "avatar",
+  avatar
+);
+
+localStorage.setItem(
+  "username",
+  username
+);
+
+localStorage.setItem(
+  "activeTheme",
+  activeTheme
+);
 
 }, [
   xp,
@@ -1023,7 +1069,7 @@ playSound(levelSound);
         })
       );
     }
-
+if (!mounted) return null;
     return (
       <main
   className={`min-h-screen text-white relative overflow-hidden selection:bg-purple-500/40 ${
@@ -1221,6 +1267,7 @@ playSound(levelSound);
   </h2>
 
 </div>
+          
           {/* XP CARD */}
 <div className="bg-zinc-900/70 backdrop-blur-xl border border-purple-500/20 rounded-3xl p-6 md:p-8 mb-10 shadow-[0_0_40px_rgba(168,85,247,0.15)] hover:border-purple-400 transition-all">
 
@@ -1242,7 +1289,33 @@ playSound(levelSound);
   />
 
 </div>
+<div className="bg-zinc-900/70 backdrop-blur-xl border border-cyan-500/20 rounded-3xl p-6 mb-10">
 
+  <div className="flex items-center gap-5">
+
+    <div className="text-6xl">
+      {avatar}
+    </div>
+
+    <div>
+
+      <h2 className="text-3xl font-black">
+  {username}
+</h2>
+
+      <p className="text-cyan-400">
+        {currentRank}
+      </p>
+
+      <p className="text-zinc-400">
+        Level {level}
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
 {/* COINS CARD */}
 <div className="bg-zinc-900/70 backdrop-blur-xl border border-yellow-500/20 rounded-3xl p-6 mb-10 shadow-[0_0_30px_rgba(250,204,21,0.15)]">
 
@@ -1387,15 +1460,27 @@ playSound(levelSound);
   </button>
 
   <button
-    onClick={() => setActiveTab("shop")}
-    className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold whitespace-nowrap transition-all ${
-      activeTab === "shop"
-        ? "bg-green-500 text-black shadow-lg shadow-green-500/30"
-        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-    }`}
-  >
-    Shop
-  </button>
+  onClick={() => setActiveTab("shop")}
+  className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold whitespace-nowrap transition-all ${
+    activeTab === "shop"
+      ? "bg-green-500 text-black shadow-lg shadow-green-500/30"
+      : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+  }`}
+>
+  Shop
+</button>
+
+<button
+  onClick={() => setActiveTab("profile")}
+  className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold whitespace-nowrap transition-all ${
+    activeTab === "profile"
+      ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/30"
+      : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+  }`}
+>
+  Profile
+</button>
+  
 
 </div>
 {/* TAB CONTENT */}
@@ -1453,8 +1538,143 @@ playSound(levelSound);
     ))}
 
   </motion.div>
+)}{activeTab === "profile" && (
+  <motion.div
+    key="profile"
+    initial={{
+      opacity: 0,
+      y: 20,
+    }}
+    animate={{
+      opacity: 1,
+      y: 0,
+    }}
+    exit={{
+      opacity: 0,
+      y: -20,
+    }}
+    className="space-y-6"
+  >
+
+   {/* PREMIUM PROFILE HEADER */}
+
+<div className="bg-gradient-to-r from-purple-900/70 via-pink-900/70 to-cyan-900/70 backdrop-blur-xl border border-cyan-400/30 rounded-3xl p-8 shadow-[0_0_40px_rgba(34,211,238,0.2)]">
+
+  <div className="flex items-center gap-6 mb-6">
+
+    <div className="text-8xl">
+      {avatar}
+    </div>
+
+    <div>
+
+      <h2 className="text-5xl font-black">
+        {username}
+      </h2>
+
+      <p className="text-cyan-400 font-bold">
+        ⭐ PREMIUM MEMBER
+      </p>
+
+      <p className="text-zinc-300">
+        {currentRank}
+      </p>
+
+      <p className="text-zinc-500">
+        Level {level}
+      </p>
+
+    </div>
+
+  </div>
+
+  <input
+    type="text"
+    maxLength={20}
+    value={username}
+    onChange={(e) =>
+      setUsername(e.target.value)
+    }
+    placeholder="Enter username..."
+    className="w-full bg-black/50 border border-cyan-500/20 rounded-2xl px-5 py-4 text-white outline-none"
+  />
+
+</div>
+
+    {/* PROFILE STATS */}
+
+    <div className="grid md:grid-cols-3 gap-5">
+
+      <div className="bg-zinc-900/70 rounded-3xl p-6 border border-purple-500/20">
+
+        <p className="text-zinc-500">
+          Total XP
+        </p>
+
+        <h2 className="text-4xl font-black text-purple-400">
+          {totalXP}
+        </h2>
+
+      </div>
+
+      <div className="bg-zinc-900/70 rounded-3xl p-6 border border-orange-500/20">
+
+        <p className="text-zinc-500">
+          Streak
+        </p>
+
+        <h2 className="text-4xl font-black text-orange-400">
+          🔥 {streak}
+        </h2>
+
+      </div>
+
+      <div className="bg-zinc-900/70 rounded-3xl p-6 border border-yellow-500/20">
+
+        <p className="text-zinc-500">
+          Coins
+        </p>
+
+        <h2 className="text-4xl font-black text-yellow-400">
+          💰 {coins}
+        </h2>
+
+      </div>
+
+    </div>
+
+    {/* AVATAR SELECTOR */}
+
+    <div className="bg-zinc-900/70 backdrop-blur-xl border border-cyan-500/20 rounded-3xl p-8">
+
+      <h2 className="text-3xl font-black mb-6">
+        Choose Avatar
+      </h2>
+
+      <div className="grid grid-cols-4 gap-4">
+
+        {avatars.map((item) => (
+          <button
+            key={item}
+            onClick={() =>
+              setAvatar(item)
+            }
+            className={`text-5xl rounded-3xl p-6 border transition-all ${
+              avatar === item
+                ? "border-cyan-400 bg-cyan-500/10 scale-110"
+                : "border-zinc-700 hover:border-cyan-500"
+            }`}
+          >
+            {item}
+          </button>
+        ))}
+
+      </div>
+
+    </div>
+
+  </motion.div>
 )}
- 
  
  {/* DAILY */}
 {activeTab === "daily" && (
@@ -1627,6 +1847,7 @@ playSound(levelSound);
 
           <button
   onClick={() => {
+   
     // THEME SYSTEM
     if (item.type === "theme") {
       // FREE DEFAULT THEME
@@ -1740,7 +1961,55 @@ playSound(levelSound);
           
 {/* FLOATING MOBILE NAVBAR */}  
 </div> {/* closes relative z-10 */}
+<div className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-xl border-t border-white/10 p-2">
 
+  <div className="flex justify-around">
+
+    <button
+      onClick={() => setActiveTab("daily")}
+      className="flex flex-col items-center text-xs"
+    >
+      📋
+      <span>Daily</span>
+    </button>
+
+    <button
+      onClick={() => setActiveTab("focus")}
+      className="flex flex-col items-center text-xs"
+    >
+      ⏳
+      <span>Focus</span>
+    </button>
+<button
+  onClick={() =>
+    setActiveTab("profile")
+  }
+  className="flex flex-col items-center text-xs"
+>
+  👤
+  <span>Profile</span>
+</button>
+    <button
+      onClick={() => setActiveTab("achievement")}
+      className="flex flex-col items-center text-xs"
+    >
+      🏆
+      <span>Awards</span>
+    </button>
+
+    <button
+      onClick={() => setActiveTab("shop")}
+      className="flex flex-col items-center text-xs"
+    
+    >
+
+      🛒
+      <span>Shop</span>
+    </button>
+
+  </div>
+
+</div>
 </main>
   );
 } 
