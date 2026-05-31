@@ -5,7 +5,6 @@ import Script from "next/script";
 export const metadata: Metadata = {
   title: "SYNTRIX",
   description: "Human Optimization System",
-  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -15,6 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
+
       <body>
         {children}
 
@@ -25,14 +28,7 @@ export default function RootLayout({
           {`
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', () => {
-                navigator.serviceWorker
-                  .register('/sw.js')
-                  .then(() => {
-                    console.log('SW Registered');
-                  })
-                  .catch((err) => {
-                    console.log('SW Failed', err);
-                  });
+                navigator.serviceWorker.register('/sw.js');
               });
             }
           `}
