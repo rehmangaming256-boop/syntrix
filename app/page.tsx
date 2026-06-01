@@ -292,30 +292,87 @@ const shopItems = [
   {
     id: 2,
     name: "Neon Blue",
-    price: 400,
+    price: 250,
     type: "theme",
   },
   {
     id: 3,
     name: "2x XP Boost",
-    price: 300,
+    price: 250,
     type: "boost",
   },
   {
     id: 4,
     name: "Streak Shield",
-    price: 500,
+    price: 250,
     type: "shield",
   },
+{
+  id: 5,
+  name: "Crimson Red",
+  price: 250,
+  type: "theme",
+},
+{
+  id: 6,
+  name: "Emerald Green",
+  price: 250,
+  type: "theme",
+},
+{
+  id: 7,
+  name: "Golden Empire",
+  price: 300,
+  type: "theme",
+},
+{
+  id: 8,
+  name: "🐉 Dragon Avatar",
+  price: 750,
+  type: "avatar",
+},
+{
+  id: 9,
+  name: "☠️ Mythic Avatar",
+  price: 1500,
+  type: "avatar",
+},
+{
+  id: 10,
+  name: "XP Potion",
+  price: 250,
+  type: "xp",
+},
+{
+  id: 11,
+  name: "Premium Badge 👑",
+  price: 2000,
+  type: "badge",
+},
+{
+  id: 12,
+  name: "Galaxy Theme",
+  price: 350,
+  type: "theme",
+},
+{
+  id: 13,
+  name: "Premium Badge 👑",
+  price: 500,
+  type: "premium",
+},
 ];
+
  
+
 export default function Home() {
   const [avatar, setAvatar] =
   useState("⚡");
-
+const [premium, setPremium] = useState(false);
 const [username, setUsername] =
   useState("SYNTRIX USER");
-
+const [ownedAvatars, setOwnedAvatars] =
+  useState(["⚡"]);
 const avatars = [
   "⚡",
   "🔥",
@@ -390,6 +447,8 @@ const [rerollsLeft, setRerollsLeft] =
       useState(0);
   const [activeTab, setActiveTab] =
   useState("daily");
+  const [shopCategory, setShopCategory] =
+  useState("all");
   const leaderboard = [
   {
     name: "Shadow",
@@ -705,7 +764,15 @@ const achievements: Achievement[] =
     useEffect(() => {
     const savedXP =
       localStorage.getItem("xp");
-const savedRerolls =
+const savedOwnedAvatars =
+  localStorage.getItem("ownedAvatars");
+
+if (savedOwnedAvatars) {
+  setOwnedAvatars(
+    JSON.parse(savedOwnedAvatars)
+  );
+}
+      const savedRerolls =
   localStorage.getItem(
     "rerollsLeft"
   );
@@ -719,12 +786,18 @@ if (savedRerolls) {
       localStorage.getItem("level");
 const savedCoins =
   localStorage.getItem("coins");
-
+const savedPremium =
+  localStorage.getItem("premium");
 const savedThemes =
   localStorage.getItem(
     "ownedThemes"
   );
+const savedShopCategory =
+  localStorage.getItem("shopCategory");
 
+if (savedShopCategory) {
+  setShopCategory(savedShopCategory);
+}
 const savedActiveTheme =
   localStorage.getItem(
     "activeTheme"
@@ -754,6 +827,10 @@ const savedActiveTheme =
 if (savedCoins)
   setCoins(Number(savedCoins));
 
+if (savedPremium)
+  setPremium(
+    JSON.parse(savedPremium)
+  );
 if (savedThemes)
   setOwnedThemes(
     JSON.parse(savedThemes)
@@ -763,7 +840,14 @@ if (savedActiveTheme)
   setActiveTheme(savedActiveTheme);
     const savedAvatar =
   localStorage.getItem("avatar");
-const savedUsername =
+
+
+if (savedOwnedAvatars) {
+  setOwnedAvatars(
+    JSON.parse(savedOwnedAvatars)
+  );
+}
+  const savedUsername =
   localStorage.getItem("username");
 
 if (savedUsername) {
@@ -826,7 +910,10 @@ if (savedTasks)
     "coins",
     String(coins)
   );
-
+localStorage.setItem(
+  "premium",
+  JSON.stringify(premium)
+);
   localStorage.setItem(
     "ownedThemes",
     JSON.stringify(ownedThemes)
@@ -846,8 +933,12 @@ localStorage.setItem(
 localStorage.setItem(
   "activeTheme",
   activeTheme
-);
 
+);
+localStorage.setItem(
+  "ownedAvatars",
+  JSON.stringify(ownedAvatars)
+);
 }, [
   xp,
   level,
@@ -857,6 +948,11 @@ localStorage.setItem(
   coins,
   ownedThemes,
   activeTheme,
+  premium,
+  shopCategory,
+  ownedAvatars,
+  avatar,
+  username,
 ]);
   
    useEffect(() => {
@@ -1072,13 +1168,18 @@ playSound(levelSound);
 if (!mounted) return null;
     return (
       <main
+
   className={`min-h-screen text-white relative overflow-hidden selection:bg-purple-500/40 ${
-    activeTheme ===
-    "Cyber Purple"
+    activeTheme === "Cyber Purple"
       ? "bg-purple-950"
-      : activeTheme ===
-        "Neon Blue"
+      : activeTheme === "Neon Blue"
       ? "bg-cyan-950"
+      : activeTheme === "Crimson Red"
+      ? "bg-red-950"
+      : activeTheme === "Emerald Green"
+      ? "bg-green-950"
+      : activeTheme === "Golden Empire"
+      ? "bg-yellow-950"
       : "bg-black"
   }`}
 >
@@ -1572,9 +1673,11 @@ if (!mounted) return null;
         {username}
       </h2>
 
-      <p className="text-cyan-400 font-bold">
-        ⭐ PREMIUM MEMBER
-      </p>
+      {premium && (
+  <p className="text-cyan-400 font-bold">
+    ⭐ PREMIUM MEMBER
+  </p>
+)}
 
       <p className="text-zinc-300">
         {currentRank}
@@ -1653,21 +1756,19 @@ if (!mounted) return null;
 
       <div className="grid grid-cols-4 gap-4">
 
-        {avatars.map((item) => (
-          <button
-            key={item}
-            onClick={() =>
-              setAvatar(item)
-            }
-            className={`text-5xl rounded-3xl p-6 border transition-all ${
-              avatar === item
-                ? "border-cyan-400 bg-cyan-500/10 scale-110"
-                : "border-zinc-700 hover:border-cyan-500"
-            }`}
-          >
-            {item}
-          </button>
-        ))}
+       {ownedAvatars.map((item) => (
+  <button
+    key={item}
+    onClick={() => setAvatar(item)}
+    className={`text-5xl rounded-3xl p-6 border transition-all ${
+      avatar === item
+        ? "border-cyan-400 bg-cyan-500/10 scale-110"
+        : "border-zinc-700 hover:border-cyan-500"
+    }`}
+  >
+    {item}
+  </button>
+))}
 
       </div>
 
@@ -1819,15 +1920,76 @@ if (!mounted) return null;
 
   {activeTab === "shop" && (
   <motion.div
-    key="shop"
+  
+  key="shop"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
     transition={{ duration: 0.35 }}
     className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 mb-10"
   >
+<div className="flex gap-3 mb-6 overflow-x-auto">
 
-    {shopItems.map((item) => {
+  <button
+    onClick={() =>
+      setShopCategory("all")
+    }
+    className={`px-4 py-2 rounded-xl font-bold ${
+      shopCategory === "all"
+        ? "bg-green-500 text-black"
+        : "bg-zinc-800"
+    }`}
+  >
+    All
+  </button>
+
+  <button
+    onClick={() =>
+      setShopCategory("theme")
+    }
+    className={`px-4 py-2 rounded-xl font-bold ${
+      shopCategory === "theme"
+        ? "bg-purple-500"
+        : "bg-zinc-800"
+    }`}
+  >
+    🎨 Themes
+  </button>
+
+  <button
+    onClick={() =>
+      setShopCategory("boost")
+    }
+    className={`px-4 py-2 rounded-xl font-bold ${
+      shopCategory === "boost"
+        ? "bg-cyan-500 text-black"
+        : "bg-zinc-800"
+    }`}
+  >
+    ⚡ Boosts
+  </button>
+
+  <button
+    onClick={() =>
+      setShopCategory("premium")
+    }
+    className={`px-4 py-2 rounded-xl font-bold ${
+      shopCategory === "premium"
+        ? "bg-yellow-500 text-black"
+        : "bg-zinc-800"
+    }`}
+  >
+    👑 Premium
+  </button>
+
+</div>
+    {shopItems
+  .filter(
+    (item) =>
+      shopCategory === "all" ||
+      item.type === shopCategory
+  )
+  .map((item) => {
       const owned =
         ownedThemes.includes(item.name);
 
@@ -1877,8 +2039,35 @@ if (!mounted) return null;
       alert(`Purchased ${item.name}`);
       return;
     }
+if (item.type === "avatar") {
+  if (coins < item.price) return;
 
-    // XP BOOST
+  setCoins((prev) => prev - item.price);
+
+  const emoji =
+    item.name.includes("Dragon")
+      ? "🐉"
+      : "☠️";
+
+  setOwnedAvatars((prev) => [
+    ...prev,
+    emoji,
+  ]);
+
+  alert(`Purchased ${item.name}`);
+  return;
+}
+  if (item.type === "premium") {
+  if (coins < item.price) return;
+
+  setCoins((prev) => prev - item.price);
+
+  setPremium(true);
+
+  alert("Premium Activated 👑");
+  return;
+}
+// XP BOOST
     if (item.type === "boost") {
       if (coins < item.price) return;
 
