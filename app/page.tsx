@@ -328,13 +328,13 @@ const shopItems = [
 {
   id: 8,
   name: "🐉 Dragon Avatar",
-  price: 750,
+  price: 300,
   type: "avatar",
 },
 {
   id: 9,
   name: "☠️ Mythic Avatar",
-  price: 1500,
+  price: 300,
   type: "avatar",
 },
 {
@@ -484,7 +484,38 @@ if (data) {
 
   initAuth();
 }, []);
-    
+ useEffect(() => {
+  async function loadLeaderboard() {
+    const { data, error } =
+      await supabase
+        .from("profiles")
+        .select(
+          "username, avatar, level, xp"
+        )
+        .order("level", {
+          ascending: false,
+        })
+        .order("xp", {
+          ascending: false,
+        })
+        .limit(50);
+
+    if (!error && data) {
+      setLeaderboardData(data);
+    }
+  }
+
+  loadLeaderboard();
+
+  const interval =
+    setInterval(
+      loadLeaderboard,
+      30000
+    );
+
+  return () =>
+    clearInterval(interval);
+}, []);   
 const [dailyBonusClaimed, setDailyBonusClaimed] =
   useState(false);
    
@@ -508,38 +539,8 @@ const [rerollsLeft, setRerollsLeft] =
   useState("daily");
   const [shopCategory, setShopCategory] =
   useState("all");
-  const leaderboard = [
-  {
-    name: "Shadow",
-    level: 52,
-    xp: 18200,
-    rank: "MYTHIC ⚡",
-  },
-  {
-    name: "Nova",
-    level: 41,
-    xp: 14020,
-    rank: "MASTER 👑",
-  },
-  {
-    name: "Zenith",
-    level: 33,
-    xp: 10900,
-    rank: "DIAMOND 🔷",
-  },
-  {
-    name: "Cipher",
-    level: 24,
-    xp: 7600,
-    rank: "PLATINUM 💎",
-  },
-  {
-    name: "Blaze",
-    level: 17,
-    xp: 4200,
-    rank: "GOLD 🥇",
-  },
-];  
+ const [leaderboardData, setLeaderboardData] =
+  useState<any[]>([]);
       const xpSound =
     typeof Audio !== "undefined"
       ? new Audio("/sounds/xp.mp3")
@@ -1226,12 +1227,33 @@ function completeTask(id: number) {
     })
   );
 }
+function getRank(level: number) {
+  if (level >= 50)
+    return "MYTHIC ⚡";
+
+  if (level >= 40)
+    return "MASTER 👑";
+
+  if (level >= 30)
+    return "DIAMOND 🔷";
+
+  if (level >= 20)
+    return "PLATINUM 💎";
+
+  if (level >= 15)
+    return "GOLD 🥇";
+
+  if (level >= 10)
+    return "SILVER 🥈";
+
+  return "BRONZE 🥉";
+}
 
 if (!mounted) return null;
     return (
       <main
 
-  className={`min-h-screen text-white relative overflow-hidden selection:bg-purple-500/40 ${
+  className={`min-h-screen pb-28 text-white relative overflow-hidden selection:bg-purple-500/40 ${
     activeTheme === "Cyber Purple"
       ? "bg-purple-950"
       : activeTheme === "Neon Blue"
@@ -1651,34 +1673,65 @@ if (!mounted) return null;
 {/* LEADERBOARD */}
 {activeTab === "leaderboard" && (
   <motion.div
-    key="leaderboard"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.35 }}
+     initial={{
+    opacity: 0,
+    x: 30,
+  }}
+  animate={{
+    opacity: 1,
+    x: 0,
+  }}
+  exit={{
+    opacity: 0,
+    x: -30,
+  }}
+  transition={{
+    duration: 0.3,
+  }}
     className="grid gap-5 mb-10"
   >
 
-    {leaderboard.map((user, index) => (
+    {leaderboardData.map(
+  (user, index) => (
       <div
-        key={index}
-        className="bg-zinc-900/70 backdrop-blur-xl border border-orange-500/20 rounded-3xl p-6 shadow-[0_0_30px_rgba(249,115,22,0.15)]"
-      >
+  key={index}
+  className={`backdrop-blur-xl rounded-3xl p-6 shadow-[0_0_30px_rgba(249,115,22,0.15)] border ${
+    user.username === username
+      ? "border-cyan-400 bg-cyan-500/10"
+      : "border-orange-500/20 bg-zinc-900/70"
+  }`}
+>
 
         <div className="flex items-center justify-between">
 
           <div>
 
             <p className="text-zinc-500 text-sm uppercase tracking-widest mb-2">
-              Rank #{index + 1}
+             {
+  index === 0
+    ? "👑 #1"
+    : index === 1
+    ? "🥈 #2"
+    : index === 2
+    ? "🥉 #3"
+    : `#${index + 1}`
+}
             </p>
 
-            <h2 className="text-3xl font-black text-orange-400">
-              {user.name}
-            </h2>
+            <div className="flex items-center gap-3">
+
+  <div className="text-4xl">
+    {user.avatar || "⚡"}
+  </div>
+
+  <h2 className="text-3xl font-black text-orange-400">
+    {user.username}
+  </h2>
+
+</div>
 
             <p className="text-zinc-400 mt-2">
-              {user.rank}
+              {getRank(user.level)}
             </p>
 
           </div>
@@ -1704,18 +1757,13 @@ if (!mounted) return null;
 )}{activeTab === "profile" && (
   <motion.div
     key="profile"
-    initial={{
-      opacity: 0,
-      y: 20,
-    }}
-    animate={{
-      opacity: 1,
-      y: 0,
-    }}
-    exit={{
-      opacity: 0,
-      y: -20,
-    }}
+    initial={{ opacity: 0, x: 40 }}
+animate={{ opacity: 1, x: 0 }}
+exit={{ opacity: 0, x: -40 }}
+transition={{
+  duration: 0.3,
+  ease: "easeInOut",
+}}
     className="space-y-6"
   >
 
@@ -1842,12 +1890,15 @@ if (!mounted) return null;
  {/* DAILY */}
 {activeTab === "daily" && (
   <motion.div
-    key="daily"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.35 }}
-  >
+  key="daily"
+ initial={{ opacity: 0, x: 40 }}
+animate={{ opacity: 1, x: 0 }}
+exit={{ opacity: 0, x: -40 }}
+transition={{
+  duration: 0.3,
+  ease: "easeInOut",
+}}
+>
 
     <div className="flex justify-start mb-5">
 
@@ -1978,15 +2029,121 @@ if (!mounted) return null;
 
   </motion.div>
 )}
-
-{activeTab === "shop" && (
+{/* CUSTOM TASKS */}
+{activeTab === "custom" && (
   <motion.div
-    key="shop"
+    key="custom"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
     transition={{ duration: 0.35 }}
+    className="space-y-5"
   >
+    <div className="bg-zinc-900/70 backdrop-blur-xl border border-cyan-500/20 rounded-3xl p-6">
+
+      <h2 className="text-3xl font-black text-cyan-400 mb-5">
+        Custom Tasks
+      </h2>
+
+      <div className="flex gap-3 mb-6">
+        <input
+          value={taskInput}
+          onChange={(e) =>
+            setTaskInput(e.target.value)
+          }
+          placeholder="Create a task..."
+          className="flex-1 bg-black/50 border border-cyan-500/20 rounded-xl px-4 py-3 outline-none"
+        />
+
+        <button
+          onClick={() => {
+            if (!taskInput.trim()) return;
+
+            setTasks((prev) => [
+              ...prev,
+              {
+                id: Date.now(),
+                title: taskInput,
+                xp: 25,
+                done: false,
+              },
+            ]);
+
+            setTaskInput("");
+          }}
+          className="bg-cyan-500 hover:bg-cyan-400 text-black font-black px-5 rounded-xl"
+        >
+          Add
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {tasks.map((task) => (
+          <div
+            key={task.id}
+            className={`rounded-2xl p-5 border ${
+              task.done
+                ? "bg-green-500/10 border-green-400"
+                : "bg-zinc-800 border-zinc-700"
+            }`}
+          >
+            <h3 className="text-xl font-bold mb-2">
+              {task.title}
+            </h3>
+
+            <p className="text-zinc-400 mb-4">
+              +{task.xp} XP
+            </p>
+
+            <div className="flex gap-3">
+  <button
+    onClick={() =>
+      completeTask(task.id)
+    }
+    disabled={task.done}
+    className={`flex-1 py-3 rounded-xl font-bold ${
+      task.done
+        ? "bg-green-500 text-black"
+        : "bg-cyan-500 hover:bg-cyan-400 text-black"
+    }`}
+  >
+    {task.done
+      ? "COMPLETED"
+      : "COMPLETE"}
+  </button>
+
+  <button
+    onClick={() =>
+      setTasks((prev) =>
+        prev.filter(
+          (t) => t.id !== task.id
+        )
+      )
+    }
+    className="px-5 py-3 rounded-xl bg-red-500 hover:bg-red-400 font-bold"
+  >
+    🗑️
+  </button>
+</div>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  </motion.div>
+)}
+{activeTab === "shop" && (
+  <motion.div
+    key="shop"
+     initial={{ opacity: 0, x: 40 }}
+animate={{ opacity: 1, x: 0 }}
+exit={{ opacity: 0, x: -40 }}
+transition={{
+  duration: 0.3,
+  ease: "easeInOut",
+}}
+>
+
     {/* CATEGORY FILTERS */}
     <div className="flex gap-2 flex-wrap mb-6">
       <button
@@ -2216,11 +2373,21 @@ if (!mounted) return null;
   {/* ACHIEVEMENTS */}
   {activeTab === "achievement" && (
     <motion.div
-      key="achievement"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.35 }}
+       initial={{
+    opacity: 0,
+    x: 30,
+  }}
+  animate={{
+    opacity: 1,
+    x: 0,
+  }}
+  exit={{
+    opacity: 0,
+    x: -30,
+  }}
+  transition={{
+    duration: 0.3,
+  }}
       className="grid gap-5 mb-10"
     >
       {achievements.map((achievement, index) => (
@@ -2260,55 +2427,108 @@ if (!mounted) return null;
           
 {/* FLOATING MOBILE NAVBAR */}  
 </div> {/* closes relative z-10 */}
-<div className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-xl border-t border-white/10 p-2">
+<div className="fixed bottom-0 left-0 right-0 z-50 h-24 px-4 pb-[env(safe-area-inset-bottom)]">
+  <div className="bg-zinc-950/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-2 shadow-[0_0_40px_rgba(168,85,247,0.2)]">
 
-  <div className="flex justify-around">
+    <div className="flex justify-around">
 
-    <button
-      onClick={() => setActiveTab("daily")}
-      className="flex flex-col items-center text-xs"
-    >
-      📋
-      <span>Daily</span>
-    </button>
+      {[
+        {
+          tab: "daily",
+          icon: "📋",
+          label: "Daily",
+        },
+        {
+          tab: "focus",
+          icon: "⏳",
+          label: "Focus",
+        },
+        {
+          tab: "profile",
+          icon: "👤",
+          label: "Profile",
+        },
+        {
+  tab: "custom",
+  icon: "📝",
+  label: "Custom",
+},
+        {
+          tab: "achievement",
+          icon: "🏆",
+          label: "Awards",
+        },
+        {
+          tab: "shop",
+          icon: "🛒",
+          label: "Shop",
+        },
+      ].map((item) => (
+        <button
+          key={item.tab}
+          onClick={() =>
+            setActiveTab(item.tab)
+          }
+          className="relative flex flex-col items-center justify-center px-3 py-2"
+        >
+          {activeTab === item.tab && (        
+           
+          <motion.div
+              
+          layoutId="navbarGlow"
+              className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500 to-cyan-500"
+              transition={{
+                type: "spring",
+                stiffness: 400,
+                damping: 30,
+              }}
+            />
+          )}
 
-    <button
-      onClick={() => setActiveTab("focus")}
-      className="flex flex-col items-center text-xs"
-    >
-      ⏳
-      <span>Focus</span>
-    </button>
-<button
-  onClick={() =>
-    setActiveTab("profile")
-  }
-  className="flex flex-col items-center text-xs"
->
-  👤
-  <span>Profile</span>
-</button>
-    <button
-      onClick={() => setActiveTab("achievement")}
-      className="flex flex-col items-center text-xs"
-    >
-      🏆
-      <span>Awards</span>
-    </button>
+          <motion.div
+            animate={{
+              scale:
+                activeTab === item.tab
+                  ? 1.2
+                  : 1,
+              y:
+                activeTab === item.tab
+                  ? -4
+                  : 0,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+            }}
+             className={`relative z-10 transition-all ${
+    activeTab === item.tab
+      ? "text-white drop-shadow-[0_0_25px_rgba(168,85,247,1)]"
+      : "text-zinc-400"
+            }`}
+          >
+            <div className="text-xl">
+              {item.icon}
+            </div>
 
-    <button
-      onClick={() => setActiveTab("shop")}
-      className="flex flex-col items-center text-xs"
-    
-    >
+            <span className="text-[11px] font-bold">
+              {item.label}
+            
+            </span>
+          
+            {activeTab === item.tab && (
+    <motion.div
+      layoutId="activeDot"
+      className="w-1.5 h-1.5 rounded-full bg-white mt-1 mx-auto"
+    />
+  )}
+</motion.div>
+        </button>
+      ))}
 
-      🛒
-      <span>Shop</span>
-    </button>
+    </div>
 
   </div>
-
-</div>
+</div>  
 </main>
   );
 } 
