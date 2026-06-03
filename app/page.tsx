@@ -1,5 +1,5 @@
 "use client";
-
+import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
   type Task = {
@@ -61,7 +61,7 @@ import { motion, AnimatePresence } from "framer-motion";
     amount: number;
   }) {
     return (
-      <div className="fixed top-10 right-10 z-50 animate-bounce">
+      <div className="fixed top-28 right-6 z-[9999] animate-bounce pointer-events-none">
         <div className="text-4xl font-black text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.8)]">
           +{amount} XP
         </div>
@@ -343,29 +343,27 @@ const shopItems = [
   price: 250,
   type: "xp",
 },
+
 {
   id: 11,
-  name: "Premium Badge 👑",
-  price: 2000,
-  type: "badge",
-},
-{
-  id: 12,
   name: "Galaxy Theme",
   price: 350,
   type: "theme",
 },
 {
-  id: 13,
+  id: 12,
   name: "Premium Badge 👑",
   price: 500,
   type: "premium",
 },
+
 ];
+
 
  
 
 export default function Home() {
+ const [userId, setUserId] = useState("");
   const [avatar, setAvatar] =
   useState("⚡");
 const [premium, setPremium] = useState(false);
@@ -383,13 +381,26 @@ const avatars = [
   "🌌",
   "☠️",
 ]; 
-  const [xp, setXp] = useState(0);
+ useEffect(() => {
+  async function init() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      await supabase.auth.signInAnonymously();
+    }
+  }
+
+  init();
+}, []);
+const [xp, setXp] = useState(0);
 
 const [coins, setCoins] =
   useState(0);
 
 const [ownedThemes, setOwnedThemes] =
-  useState<string[]>(["Default"]);
+  useState(["Default"]);
 
 const [activeTheme, setActiveTheme] =
   useState("Default");
@@ -424,7 +435,55 @@ useEffect(() => {
 }, []);
     const [level, setLevel] =
       useState(1);
+useEffect(() => {
+  async function initAuth() {
+    let {
+      data: { session },
+    } = await supabase.auth.getSession();
 
+    if (!session) {
+      const { data } =
+        await supabase.auth.signInAnonymously();
+
+      session = data.session;
+    }
+
+    if (session?.user?.id) {
+      setUserId(session.user.id);
+    }
+ if (!session?.user?.id) return;
+
+const { data } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("id", session.user.id)
+  .single();
+
+if (data) {
+  setUsername(data.username || "SYNTRIX USER");
+  setAvatar(data.avatar || "⚡");
+  setXp(data.xp || 0);
+  setLevel(data.level || 1);
+  setCoins(data.coins || 0);
+  setStreak(data.streak || 1);
+  setBestStreak(data.best_streak || 1);
+  setActiveTheme(data.active_theme || "Default");
+
+  setPremium(data.premium || false);
+
+  setOwnedThemes(
+    data.owned_themes || ["Default"]
+  );
+
+  setOwnedAvatars(
+    data.owned_avatars || ["⚡"]
+  );
+}
+  }
+
+
+  initAuth();
+}, []);
     
 const [dailyBonusClaimed, setDailyBonusClaimed] =
   useState(false);
@@ -939,6 +998,7 @@ localStorage.setItem(
   "ownedAvatars",
   JSON.stringify(ownedAvatars)
 );
+saveToCloud();
 }, [
   xp,
   level,
@@ -1048,7 +1108,28 @@ localStorage.setItem(
     todayString
   );
 }, []);
-   
+ async function saveToCloud() {
+  if (!userId) return;
+
+  await supabase
+    .from("profiles")
+    .upsert({
+      id: userId,
+      username,
+      avatar,
+      xp,
+      level,
+      coins,
+      streak,
+      best_streak: bestStreak,
+      active_theme: activeTheme,
+
+      // NEW
+      premium,
+      owned_themes: ownedThemes,
+      owned_avatars: ownedAvatars,
+    });
+}
   function addXP(amount: number) {
   setFloatingXP(amount);
 
@@ -1126,45 +1207,26 @@ playSound(levelSound);
   );
 }
 
-    function addTask() {
-      if (!taskInput.trim()) return;
+function completeTask(id: number) {
+  setTasks((prev) =>
+    prev.map((task) => {
+      if (
+        task.id === id &&
+        !task.done
+      ) {
+        addXP(task.xp);
 
-      const newTask = {
-        id: Date.now(),
-        title: taskInput,
-        xp: 20,
-        done: false,
-      };
+        return {
+          ...task,
+          done: true,
+        };
+      }
 
-      setTasks((prev) => [
-        ...prev,
-        newTask,
-      ]);
+      return task;
+    })
+  );
+}
 
-      setTaskInput("");
-    }
-
-    function completeTask(id: number) {
-      setTasks((prev) =>
-        prev.map((task) => {
-          if (
-            task.id === id &&
-            !task.done
-          ) {
-            addXP(task.xp);
-
-            
-
-            return {
-              ...task,
-              done: true,
-            };
-          }
-
-          return task;
-        })
-      );
-    }
 if (!mounted) return null;
     return (
       <main
@@ -1776,7 +1838,7 @@ if (!mounted) return null;
 
   </motion.div>
 )}
- 
+  
  {/* DAILY */}
 {activeTab === "daily" && (
   <motion.div
@@ -1847,10 +1909,9 @@ if (!mounted) return null;
       <p className="text-zinc-400 mt-2">
         Every 5 completed quests = +50 XP bonus
       </p>
+<div className="flex gap-3 mb-6 overflow-x-auto"></div>
 
-    </div>
-
-    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+    
 
       <AnimatePresence>
 
@@ -1918,188 +1979,237 @@ if (!mounted) return null;
   </motion.div>
 )}
 
-  {activeTab === "shop" && (
+{activeTab === "shop" && (
   <motion.div
-  
-  key="shop"
+    key="shop"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
     transition={{ duration: 0.35 }}
-    className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 mb-10"
   >
-<div className="flex gap-3 mb-6 overflow-x-auto">
+    {/* CATEGORY FILTERS */}
+    <div className="flex gap-2 flex-wrap mb-6">
+      <button
+        onClick={() => setShopCategory("all")}
+        className={`px-4 py-2 rounded-xl font-bold ${
+          shopCategory === "all"
+            ? "bg-green-500 text-black"
+            : "bg-zinc-800"
+        }`}
+      >
+        All
+      </button>
 
-  <button
-    onClick={() =>
-      setShopCategory("all")
-    }
-    className={`px-4 py-2 rounded-xl font-bold ${
-      shopCategory === "all"
-        ? "bg-green-500 text-black"
-        : "bg-zinc-800"
-    }`}
-  >
-    All
-  </button>
+      <button
+        onClick={() => setShopCategory("theme")}
+        className={`px-4 py-2 rounded-xl font-bold ${
+          shopCategory === "theme"
+            ? "bg-purple-500"
+            : "bg-zinc-800"
+        }`}
+      >
+        🎨 Themes
+      </button>
 
-  <button
-    onClick={() =>
-      setShopCategory("theme")
-    }
-    className={`px-4 py-2 rounded-xl font-bold ${
-      shopCategory === "theme"
-        ? "bg-purple-500"
-        : "bg-zinc-800"
-    }`}
-  >
-    🎨 Themes
-  </button>
+      <button
+        onClick={() => setShopCategory("boost")}
+        className={`px-4 py-2 rounded-xl font-bold ${
+          shopCategory === "boost"
+            ? "bg-cyan-500 text-black"
+            : "bg-zinc-800"
+        }`}
+      >
+        ⚡ Boosts
+      </button>
 
-  <button
-    onClick={() =>
-      setShopCategory("boost")
-    }
-    className={`px-4 py-2 rounded-xl font-bold ${
-      shopCategory === "boost"
-        ? "bg-cyan-500 text-black"
-        : "bg-zinc-800"
-    }`}
-  >
-    ⚡ Boosts
-  </button>
+      <button
+        onClick={() => setShopCategory("premium")}
+        className={`px-4 py-2 rounded-xl font-bold ${
+          shopCategory === "premium"
+            ? "bg-yellow-500 text-black"
+            : "bg-zinc-800"
+        }`}
+      >
+        👑 Premium
+      </button>
 
-  <button
-    onClick={() =>
-      setShopCategory("premium")
-    }
-    className={`px-4 py-2 rounded-xl font-bold ${
-      shopCategory === "premium"
-        ? "bg-yellow-500 text-black"
-        : "bg-zinc-800"
-    }`}
-  >
-    👑 Premium
-  </button>
+      <button
+        onClick={() => setShopCategory("avatar")}
+        className={`px-4 py-2 rounded-xl font-bold ${
+          shopCategory === "avatar"
+            ? "bg-pink-500 text-white"
+            : "bg-zinc-800"
+        }`}
+      >
+        😀 Avatars
+      </button>
+    </div>
 
-</div>
-    {shopItems
-  .filter(
-    (item) =>
-      shopCategory === "all" ||
-      item.type === shopCategory
-  )
-  .map((item) => {
-      const owned =
-        ownedThemes.includes(item.name);
+    {/* SHOP ITEMS GRID */}
+    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 mb-10">
+      {shopItems
+        .filter(
+          (item) =>
+            shopCategory === "all" ||
+            item.type === shopCategory
+        )
+        .map((item) => {
+          const owned =
+            item.name === "Default"
+              ? true
+              : item.type === "theme"
+              ? ownedThemes.includes(item.name)
+              : item.type === "avatar"
+              ? ownedAvatars.includes(
+                  item.name.includes("Dragon")
+                    ? "🐉"
+                    : "☠️"
+                )
+              : false;
 
-      return (
-        <div
-          key={item.id}
-          className="bg-zinc-900/70 backdrop-blur-xl border border-green-500/20 rounded-3xl p-6 shadow-[0_0_30px_rgba(34,197,94,0.15)]"
-        >
+          return (
+            <div
+              key={item.id}
+              className="bg-zinc-900/70 backdrop-blur-xl border border-green-500/20 rounded-3xl p-6 shadow-[0_0_30px_rgba(34,197,94,0.15)]"
+            >
+              <h2 className="text-3xl font-black text-green-400 mb-3">
+                {item.name}
+              </h2>
 
-          <h2 className="text-3xl font-black text-green-400 mb-3">
-            {item.name}
-          </h2>
+              <p className="text-zinc-400 mb-6">
+                Cost: {item.price} Coins
+              </p>
 
-          <p className="text-zinc-400 mb-6">
-            Cost: {item.price} Coins
-          </p>
+              <button
+                onClick={() => {
+                  // THEMES
+                  if (item.type === "theme") {
+                    if (item.name === "Default") {
+                      setActiveTheme("Default");
+                      return;
+                    }
 
-          <button
-  onClick={() => {
-   
-    // THEME SYSTEM
-    if (item.type === "theme") {
-      // FREE DEFAULT THEME
-      if (item.name === "Default") {
-        setActiveTheme("Default");
-        return;
-      }
+                    if (ownedThemes.includes(item.name)) {
+                      setActiveTheme(item.name);
+                      return;
+                    }
 
-      // OWNED THEMES → JUST ACTIVATE
-      if (owned) {
-        setActiveTheme(item.name);
-        return;
-      }
+                    if (coins < item.price) return;
 
-      // BUY THEME
-      if (coins < item.price) return;
+                    setCoins((prev) => prev - item.price);
 
-      setCoins((prev) => prev - item.price);
+                    setOwnedThemes((prev) => [
+                      ...prev,
+                      item.name,
+                    ]);
 
-      setOwnedThemes((prev) => [
-        ...prev,
-        item.name,
-      ]);
+                    setActiveTheme(item.name);
 
-      setActiveTheme(item.name);
+                    alert(`Purchased ${item.name}`);
+                    return;
+                  }
 
-      alert(`Purchased ${item.name}`);
-      return;
-    }
-if (item.type === "avatar") {
-  if (coins < item.price) return;
+                  // AVATARS
+                  if (item.type === "avatar") {
+                    const emoji =
+                      item.name.includes("Dragon")
+                        ? "🐉"
+                        : "☠️";
 
-  setCoins((prev) => prev - item.price);
+                    if (
+                      ownedAvatars.includes(emoji)
+                    ) {
+                      setAvatar(emoji);
+                      return;
+                    }
 
-  const emoji =
-    item.name.includes("Dragon")
-      ? "🐉"
-      : "☠️";
+                    if (coins < item.price) return;
 
-  setOwnedAvatars((prev) => [
-    ...prev,
-    emoji,
-  ]);
+                    setCoins((prev) => prev - item.price);
 
-  alert(`Purchased ${item.name}`);
-  return;
-}
-  if (item.type === "premium") {
-  if (coins < item.price) return;
+                    setOwnedAvatars((prev) => [
+                      ...prev,
+                      emoji,
+                    ]);
 
-  setCoins((prev) => prev - item.price);
+                    setAvatar(emoji);
 
-  setPremium(true);
+                    alert(
+                      `Purchased ${item.name}`
+                    );
+                    return;
+                  }
 
-  alert("Premium Activated 👑");
-  return;
-}
-// XP BOOST
-    if (item.type === "boost") {
-      if (coins < item.price) return;
+                  // PREMIUM
+                  if (item.type === "premium") {
+                    if (premium) return;
 
-      setCoins((prev) => prev - item.price);
+                    if (coins < item.price)
+                      return;
 
-      addXP(100);
+                    setCoins(
+                      (prev) =>
+                        prev - item.price
+                    );
 
-      alert(`Purchased ${item.name}`);
-    }
-  }}
-  className={`w-full py-4 rounded-2xl font-black transition-all ${
-    coins < item.price &&
-    !owned &&
-    item.name !== "Default"
-      ? "bg-zinc-700 text-zinc-500"
-      : "bg-green-500 hover:bg-green-400 text-black"
-  }`}
->
-  {item.type === "theme" &&
-  activeTheme === item.name
-    ? "ACTIVE"
-    : owned
-    ? "USE"
-    : item.name === "Default"
-    ? "USE"
-    : "BUY"}
-</button>
+                    setPremium(true);
 
-        </div>
-      );
-    })}
+                    alert(
+                      "Premium Activated 👑"
+                    );
+                    return;
+                  }
 
+                  // BOOST
+                  if (item.type === "boost") {
+                    if (coins < item.price)
+                      return;
+
+                    setCoins(
+                      (prev) =>
+                        prev - item.price
+                    );
+
+                    addXP(100);
+
+                    alert(
+                      `Purchased ${item.name}`
+                    );
+                    return;
+                  }
+                }}
+                className={`w-full py-4 rounded-2xl font-black transition-all ${
+                  coins < item.price &&
+                  !owned &&
+                  item.name !== "Default"
+                    ? "bg-zinc-700 text-zinc-500"
+                    : "bg-green-500 hover:bg-green-400 text-black"
+                }`}
+              >
+                {item.type === "theme" &&
+                activeTheme === item.name
+                  ? "ACTIVE"
+                  : item.type === "avatar" &&
+                    avatar ===
+                      (item.name.includes(
+                        "Dragon"
+                      )
+                        ? "🐉"
+                        : "☠️")
+                  ? "ACTIVE"
+                  : owned
+                  ? "USE"
+                  : item.type === "premium" &&
+                    premium
+                  ? "OWNED"
+                  : item.name === "Default"
+                  ? "USE"
+                  : "BUY"}
+              </button>
+            </div>
+          );
+        })}
+    </div>
   </motion.div>
 )}
 
