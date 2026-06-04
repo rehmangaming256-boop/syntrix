@@ -16,7 +16,12 @@ import { motion, AnimatePresence } from "framer-motion";
     done: boolean;
   };
 
-  
+  type WeeklyQuest = {
+  id: number;
+  title: string;
+  xp: number;
+  done: boolean;
+};
 
   type Achievement = {
     title: string;
@@ -276,6 +281,7 @@ import { motion, AnimatePresence } from "framer-motion";
     xp: 50,
   },
 ];
+
 const shopItems = [
   {
     id: 0,
@@ -360,13 +366,44 @@ const shopItems = [
 ];
 
 
- 
+ const badgePool = [
+  {
+    id: "first_task",
+    title: "🚀 First Task",
+  },
+  {
+    id: "focus_master",
+    title: "⏳ Focus Master",
+  },
+  {
+    id: "streak_7",
+    title: "🔥 7 Day Streak",
+  },
+  {
+    id: "streak_30",
+    title: "👑 30 Day Streak",
+  },
+  {
+    id: "level_10",
+    title: "🥈 Silver Rank",
+  },
+  {
+    id: "level_20",
+    title: "💎 Platinum Rank",
+  },
+  {
+    id: "level_50",
+    title: "⚡ Mythic Legend",
+  },
+];
 
 export default function Home() {
  const [userId, setUserId] = useState("");
   const [avatar, setAvatar] =
   useState("⚡");
 const [premium, setPremium] = useState(false);
+const [badges, setBadges] = useState<string[]>([]);
+ const [tasks, setTasks] = useState<Task[]>([]);
 const [username, setUsername] =
   useState("SYNTRIX USER");
 const [ownedAvatars, setOwnedAvatars] =
@@ -381,7 +418,38 @@ const avatars = [
   "🌌",
   "☠️",
 ]; 
- useEffect(() => {
+
+useEffect(() => {
+  const savedBadges =
+    localStorage.getItem("badges");
+
+  if (savedBadges) {
+    setBadges(JSON.parse(savedBadges));
+  }
+}, []);
+
+const [weeklyQuests, setWeeklyQuests] =
+  useState<WeeklyQuest[]>([
+    {
+      id: 1,
+      title: "Complete 10 Tasks",
+      xp: 250,
+      done: false,
+    },
+    {
+      id: 2,
+      title: "Complete 5 Focus Sessions",
+      xp: 300,
+      done: false,
+    },
+    {
+      id: 3,
+      title: "Earn 1000 XP",
+      xp: 500,
+      done: false,
+    },
+  ]);
+useEffect(() => {
   async function init() {
     const {
       data: { session },
@@ -393,6 +461,42 @@ const avatars = [
   }
 
   init();
+}, []);
+useEffect(() => {
+  const today = new Date().toDateString();
+
+  const savedDate =
+    localStorage.getItem("lastLogin");
+
+  const savedStreak = Number(
+    localStorage.getItem("loginStreak") || 1
+  );
+
+  if (!savedDate) {
+    localStorage.setItem("lastLogin", today);
+    localStorage.setItem("loginStreak", "1");
+
+    setLoginStreak(1);
+  } else if (savedDate !== today) {
+    const newStreak = savedStreak + 1;
+
+    setLoginStreak(newStreak);
+
+    localStorage.setItem(
+      "loginStreak",
+      String(newStreak)
+    );
+localStorage.setItem(
+  "badges",
+  JSON.stringify(badges)
+);
+    localStorage.setItem(
+      "lastLogin",
+      today
+    );
+  } else {
+    setLoginStreak(savedStreak);
+  }
 }, []);
 const [xp, setXp] = useState(0);
 
@@ -433,58 +537,150 @@ useEffect(() => {
 
   setQuote(randomQuote);
 }, []);
-    const [level, setLevel] =
-      useState(1);
-useEffect(() => {
-  async function initAuth() {
-    let {
+   
+   const [level, setLevel] = useState(1);
+
+const [loginStreak, setLoginStreak] =
+  useState(1);
+
+const [lastLogin, setLastLogin] =
+  useState("");
+function unlockBadge(
+  badgeId: string,
+  title: string
+) {
+  if (badges.includes(badgeId))
+    return;
+
+  setBadges((prev) => [
+    ...prev,
+    badgeId,
+  ]);
+
+  localStorage.setItem(
+    "badges",
+    JSON.stringify([
+      ...badges,
+      badgeId,
+    ])
+  );
+
+  alert(
+    `🏅 Badge Unlocked!\n${title}`
+  );
+}
+  useEffect(() => {
+  async function init() {
+    const {
       data: { session },
     } = await supabase.auth.getSession();
 
     if (!session) {
-      const { data } =
-        await supabase.auth.signInAnonymously();
-
-      session = data.session;
+      await supabase.auth.signInAnonymously();
     }
-
-    if (session?.user?.id) {
-      setUserId(session.user.id);
-    }
- if (!session?.user?.id) return;
-
-const { data } = await supabase
-  .from("profiles")
-  .select("*")
-  .eq("id", session.user.id)
-  .single();
-
-if (data) {
-  setUsername(data.username || "SYNTRIX USER");
-  setAvatar(data.avatar || "⚡");
-  setXp(data.xp || 0);
-  setLevel(data.level || 1);
-  setCoins(data.coins || 0);
-  setStreak(data.streak || 1);
-  setBestStreak(data.best_streak || 1);
-  setActiveTheme(data.active_theme || "Default");
-
-  setPremium(data.premium || false);
-
-  setOwnedThemes(
-    data.owned_themes || ["Default"]
-  );
-
-  setOwnedAvatars(
-    data.owned_avatars || ["⚡"]
-  );
-}
   }
 
-
-  initAuth();
+  init();
 }, []);
  useEffect(() => {
+  const today = new Date().toDateString();
+
+  const savedDate =
+    localStorage.getItem("lastLogin");
+
+  const savedStreak = Number(
+    localStorage.getItem("loginStreak") || 1
+  );
+
+  if (!savedDate) {
+    localStorage.setItem(
+      "lastLogin",
+      today
+    );
+
+    localStorage.setItem(
+      "loginStreak",
+      "1"
+    );
+
+    setLoginStreak(1);
+  } else if (savedDate !== today) {
+    const newStreak =
+      savedStreak + 1;
+
+    setLoginStreak(newStreak);
+
+    localStorage.setItem(
+      "loginStreak",
+      String(newStreak)
+    );
+
+    localStorage.setItem(
+      "lastLogin",
+      today
+    );
+
+    const reward = Math.min(
+      20 + savedStreak * 5,
+      100
+    );
+
+    addXP(reward);
+
+    alert(
+      `🔥 Daily Reward! +20 XP\nDay ${newStreak} Streak`
+    );
+  } else {
+    setLoginStreak(savedStreak);
+  }
+
+}, []);
+useEffect(() => {
+  if (
+    tasks.filter((t) => t.done).length >= 1
+  ) {
+    unlockBadge(
+      "first_task",
+      "🚀 First Task"
+    );
+  }
+
+  if (loginStreak >= 7) {
+    unlockBadge(
+      "streak_7",
+      "🔥 7 Day Streak"
+    );
+  }
+
+  if (loginStreak >= 30) {
+    unlockBadge(
+      "streak_30",
+      "👑 30 Day Streak"
+    );
+  }
+
+  if (level >= 10) {
+    unlockBadge(
+      "level_10",
+      "🥈 Silver Rank"
+    );
+  }
+
+  if (level >= 20) {
+    unlockBadge(
+      "level_20",
+      "💎 Platinum Rank"
+    );
+  }
+
+  if (level >= 50) {
+    unlockBadge(
+      "level_50",
+      "⚡ Mythic Legend"
+    );
+  }
+}, [level, loginStreak, tasks]);
+useEffect(() => {
   async function loadLeaderboard() {
     const { data, error } =
       await supabase
@@ -539,7 +735,8 @@ const [rerollsLeft, setRerollsLeft] =
   useState("daily");
   const [shopCategory, setShopCategory] =
   useState("all");
- const [leaderboardData, setLeaderboardData] =
+ 
+  const [leaderboardData, setLeaderboardData] =
   useState<any[]>([]);
       const xpSound =
     typeof Audio !== "undefined"
@@ -611,9 +808,9 @@ useEffect(() => {
   return () =>
     clearInterval(interval);
 }, []);
-  const [lastLogin, setLastLogin] = 
-    useState("");
-    const [tasks, setTasks] = useState<Task[]>([]);
+  
+    
+   
 
     const [dailyQuests, setDailyQuests] =
   
@@ -811,7 +1008,10 @@ const achievements: Achievement[] =
       "dailyQuests",
       JSON.stringify(updatedQuests)
     );
-
+localStorage.setItem(
+  "weeklyQuests",
+  JSON.stringify(weeklyQuests)
+);
     localStorage.setItem(
       "lastQuestReset",
       new Date().toDateString()
@@ -870,7 +1070,10 @@ const savedActiveTheme =
 
     const savedDailyQuests =
       localStorage.getItem("dailyQuests");
-
+const savedWeekly =
+  localStorage.getItem(
+    "weeklyQuests"
+  );
     const lastReset =
       localStorage.getItem(
         "lastQuestReset"
@@ -917,7 +1120,11 @@ if (savedAvatar)
   setAvatar(savedAvatar);
 if (savedTasks)
       setTasks(JSON.parse(savedTasks));
-
+if (savedWeekly) {
+  setWeeklyQuests(
+    JSON.parse(savedWeekly)
+  );
+}
     if (
   !lastReset ||
   lastReset !== today
@@ -1250,7 +1457,8 @@ function getRank(level: number) {
 }
 
 if (!mounted) return null;
-    return (
+    
+return (
       <main
 
   className={`min-h-screen pb-28 text-white relative overflow-hidden selection:bg-purple-500/40 ${
@@ -1474,6 +1682,18 @@ if (!mounted) return null;
   />
 
 </div>
+{/* LOGIN STREAK */}
+<div className="bg-zinc-900/70 backdrop-blur-xl border border-orange-500/20 rounded-3xl p-6 mb-10 shadow-[0_0_30px_rgba(249,115,22,0.15)]">
+
+  <p className="text-orange-400 text-sm uppercase tracking-[0.3em] mb-2">
+    Login Streak
+  </p>
+
+  <h2 className="text-5xl font-black text-white">
+    🔥 {loginStreak} Days
+  </h2>
+
+</div>
 <div className="bg-zinc-900/70 backdrop-blur-xl border border-cyan-500/20 rounded-3xl p-6 mb-10">
 
   <div className="flex items-center gap-5">
@@ -1612,15 +1832,26 @@ if (!mounted) return null;
   </button>
 
   <button
-    onClick={() => setActiveTab("focus")}
-    className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold whitespace-nowrap transition-all ${
-      activeTab === "focus"
-        ? "bg-pink-500 text-white shadow-lg shadow-pink-500/30"
-        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-    }`}
-  >
-    Focus
-  </button>
+  onClick={() => setActiveTab("weekly")}
+  className={`px-4 py-3 rounded-2xl font-bold ${
+    activeTab === "weekly"
+      ? "bg-orange-500 text-white"
+      : "bg-zinc-800 text-zinc-400"
+  }`}
+>
+  Weekly
+</button>
+
+<button
+  onClick={() => setActiveTab("focus")}
+  className={`px-4 py-3 text-sm md:text-base rounded-2xl font-bold whitespace-nowrap transition-all ${
+    activeTab === "focus"
+      ? "bg-pink-500 text-white shadow-lg shadow-pink-500/30"
+      : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+  }`}
+>
+  Focus
+</button>
 
   <button
     onClick={() => setActiveTab("achievement")}
@@ -1855,7 +2086,24 @@ transition={{
       </div>
 
     </div>
+<div className="bg-zinc-900/70 rounded-3xl p-6 border border-yellow-500/20">
+  <h2 className="text-3xl font-black text-yellow-400 mb-5">
+    🏅 Badges
+  </h2>
 
+  <div className="flex flex-wrap gap-3">
+    {badges.map((badge) => (
+      <div
+        key={badge}
+        className="bg-yellow-500/10 border border-yellow-500/30 px-4 py-2 rounded-xl font-bold"
+      >
+        {badgePool.find(
+          (b) => b.id === badge
+        )?.title}
+      </div>
+    ))}
+  </div>
+</div>
     {/* AVATAR SELECTOR */}
 
     <div className="bg-zinc-900/70 backdrop-blur-xl border border-cyan-500/20 rounded-3xl p-8">
@@ -2369,7 +2617,75 @@ transition={{
     </div>
   </motion.div>
 )}
+{activeTab === "weekly" && (
+  <motion.div
+    key="weekly"
+    initial={{
+      opacity: 0,
+      x: 40,
+    }}
+    animate={{
+      opacity: 1,
+      x: 0,
+    }}
+    exit={{
+      opacity: 0,
+      x: -40,
+    }}
+  >
+    <div className="grid gap-5">
 
+      {weeklyQuests.map(
+        (quest) => (
+          <div
+            key={quest.id}
+            className={`rounded-3xl p-6 border ${
+              quest.done
+                ? "bg-green-500/10 border-green-400"
+                : "bg-zinc-900/70 border-orange-500/20"
+            }`}
+          >
+            <h2 className="text-2xl font-black">
+              {quest.title}
+            </h2>
+
+            <p className="text-zinc-400 mt-2">
+              Reward:
+              +{quest.xp} XP
+            </p>
+
+            <button
+              onClick={() => {
+                if (quest.done)
+                  return;
+
+                addXP(quest.xp);
+
+                setWeeklyQuests(
+                  (prev) =>
+                    prev.map((q) =>
+                      q.id === quest.id
+                        ? {
+                            ...q,
+                            done: true,
+                          }
+                        : q
+                    )
+                );
+              }}
+              className="w-full mt-5 bg-orange-500 hover:bg-orange-400 py-3 rounded-2xl font-black"
+            >
+              {quest.done
+                ? "COMPLETED"
+                : "COMPLETE"}
+            </button>
+          </div>
+        )
+      )}
+
+    </div>
+  </motion.div>
+)}
   {/* ACHIEVEMENTS */}
   {activeTab === "achievement" && (
     <motion.div
